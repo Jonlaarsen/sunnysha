@@ -1,103 +1,140 @@
-import Image from "next/image";
+"use client";
+import Qc2Component from "@/components/Qc2Component";
+import QcComponent from "@/components/QcComponent";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentview, setCurrentview] = useState<"qc" | "qc2">("qc");
+  const [loggedin, setLoggedin] = useState(false);
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (username.trim() === "admin" && password === "password") {
+      setLoggedin(true);
+      setErrorMessage("");
+      setPassword("");
+    } else {
+      setErrorMessage("Invalid username or password. Please try again.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col w-full bg-blue-50/50">
+      {!loggedin ? (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-sky-800 px-4">
+          <div className="w-full max-w-md bg-white/95 border border-white/40 backdrop-blur shadow-2xl rounded-3xl px-10 py-12 space-y-8">
+            <div className="text-center space-y-2">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 text-2xl font-extrabold shadow-inner">
+                QC
+              </div>
+              <div>
+                <p className="text-sm uppercase tracking-[0.4em] text-indigo-400">
+                  SUSU Warehouse
+                </p>
+                <h1 className="text-3xl font-bold text-slate-900">
+                  Secure Sign In
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Enter your credentials to continue
+                </p>
+              </div>
+            </div>
+
+            <form className="space-y-6" onSubmit={handleLogin}>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-600">
+                  Username
+                </label>
+                <input
+                  className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  type="text"
+                  placeholder="admin"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-600">
+                  Password
+                </label>
+                <input
+                  className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              {errorMessage && (
+                <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-2xl px-4 py-2">
+                  {errorMessage}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-sky-500 text-white font-semibold tracking-wide shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all"
+              >
+                Sign in
+              </button>
+            </form>
+
+            <p className="text-xs text-center text-slate-400">
+              QC Report System • Internal use only
+            </p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <>
+          <div className="my-8">
+            <div className="bg-white flex justify-between border-black border rounded-lg shadow-sm p-4 max-w-6xl mx-auto">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-800">
+                  <span className="bg-gradient-to-bl from-blue-400 to-purple-700 text-white rounded-full px-3.5 py-2 font-extrabold">
+                    SUSU WareHouse LC
+                  </span>{" "}
+                  QC Report System{" "}
+                  <span className="text-xs text-zinc-400 font-normal">
+                    By jon larsen
+                  </span>
+                </h1>
+              </div>
+              <div className="space-x-5">
+                <button
+                  onClick={() => setCurrentview("qc")}
+                  className={`${
+                    currentview === "qc"
+                      ? " text-blue-600 border-blue-600"
+                      : "text-gray-600 border-gray-600 "
+                  } border p-2 font-bold rounded-2xl  bg-white min-w-20`}
+                >
+                  Qc
+                </button>
+                <button
+                  onClick={() => setCurrentview("qc2")}
+                  className={`${
+                    currentview === "qc2"
+                      ? " text-blue-600 border-blue-600"
+                      : "text-gray-600 border-gray-600 "
+                  } border p-2 font-bold rounded-2xl  bg-white min-w-20`}
+                >
+                  Qc2
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border-black border h-full min-h-screen rounded-lg shadow-lg p-6 w-full max-w-6xl mx-auto pb-8 overflow-y-auto">
+            {currentview === "qc" ? <QcComponent /> : <Qc2Component />}
+          </div>
+        </>
+      )}
+      {/* Navigation Header */}
     </div>
   );
 }

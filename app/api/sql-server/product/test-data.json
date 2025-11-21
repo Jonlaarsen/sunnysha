@@ -1,0 +1,52 @@
+{
+  "recordset": [
+    {
+      "supplier": "Supplier A",
+      "po": "PO12345",
+      "partscode": "PART-001",
+      "Date": "2024-11-01",
+      "qty": 120
+    },
+    {
+      "supplier": "Supplier A",
+      "po": "PO12345",
+      "partscode": "PART-002",
+      "Date": "2024-11-02",
+      "qty": 80
+    },
+    {
+      "supplier": "Supplier B",
+      "po": "PO54321",
+      "partscode": "PART-010",
+      "Date": "2024-11-05",
+      "qty": 50
+    }
+  ],
+  "recordsets": [
+    [
+      {
+        "supplier": "Supplier A",
+        "po": "PO12345",
+        "partscode": "PART-001",
+        "Date": "2024-11-01",
+        "qty": 120
+      },
+      {
+        "supplier": "Supplier A",
+        "po": "PO12345",
+        "partscode": "PART-002",
+        "Date": "2024-11-02",
+        "qty": 80
+      },
+      {
+        "supplier": "Supplier B",
+        "po": "PO54321",
+        "partscode": "PART-010",
+        "Date": "2024-11-05",
+        "qty": 50
+      }
+    ]
+  ],
+  "barcode": "TESTBARCODE123"
+}
+

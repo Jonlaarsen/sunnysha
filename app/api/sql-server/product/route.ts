@@ -1,0 +1,106 @@
+import { NextRequest, NextResponse } from "next/server";
+import sql from "mssql";
+import fs from "fs/promises";
+import path from "path";
+
+// SQL Server connection configuration
+// These should be set as environment variables in production
+const config: sql.config = {
+  server: process.env.SQL_SERVER || "localhost",
+  database: process.env.SQL_DATABASE || "",
+  user: process.env.SQL_USER || "",
+  password: process.env.SQL_PASSWORD || "",
+  options: {
+    encrypt: process.env.SQL_ENCRYPT === "true", // Use true for Azure SQL
+    trustServerCertificate: process.env.SQL_TRUST_CERT === "true", // Use true for local dev
+    enableArithAbort: true,
+  },
+  port: parseInt(process.env.SQL_PORT || "1433"),
+};
+
+export async function GET(req: NextRequest) {
+  let pool: sql.ConnectionPool | null = null;
+  
+  try {
+    const barcode = req.nextUrl.searchParams.get("barcode");
+    const mock = req.nextUrl.searchParams.get("mock");
+
+    if (!barcode) {
+      return NextResponse.json(
+        { error: "Barcode is required" },
+        { status: 400 }
+      );
+    }
+
+    if (mock === "true") {
+      const mockPath = path.join(
+        process.cwd(),
+        "app",
+        "api",
+        "sql-server",
+        "product",
+        "test-data.json"
+      );
+      const mockContent = await fs.readFile(mockPath, "utf-8");
+      const mockData = JSON.parse(mockContent);
+      return NextResponse.json(mockData);
+    }
+
+    // Connect to SQL Server (uses connection pooling)
+    pool = await sql.connect(config);
+
+    // SQL query with parameterized barcode
+    const query = `
+      select 
+        supplier,
+        po,
+        partscode,
+        Date=ShouHuo_Date,
+        qty=sum(qty) 
+      from (
+        select a.* 
+        from 送货单 a, 收货明细 b 
+        where a.po=b.po 
+          and a.item=b.item 
+          and a.ShouHuo_Date=convert(date,b.date,121) 
+          and b.条形码=@barcode
+      ) a 
+      group by supplier,po,partscode,ShouHuo_Date
+    `;
+
+    // Execute query with parameter
+    const sqlRequest = pool.request();
+    sqlRequest.input("barcode", sql.NVarChar, barcode);
+    const result = await sqlRequest.query(query);
+
+    // Close connection pool (in production, you might want to keep it open)
+    await pool.close();
+
+    // Return the result
+    // mssql returns data in result.recordset
+    return NextResponse.json({
+      recordsets: [result.recordset],
+      recordset: result.recordset,
+    });
+  } catch (error: any) {
+    console.error("SQL Server error:", error);
+    
+    // Close connection pool on error if it exists
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (closeError) {
+        // Ignore close errors
+      }
+    }
+
+    return NextResponse.json(
+      {
+        error: "Failed to fetch data from SQL Server",
+        details: error.message || "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
