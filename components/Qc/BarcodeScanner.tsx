@@ -2,33 +2,7 @@
 
 import React from "react";
 import toast from "react-hot-toast";
-
-interface ProductData {
-  poNumber: string;
-  deliveryDate: string;
-  inspectionDate: string;
-  deliveryQuantity: string;
-  returnQuantity: string;
-  lotNumber: string;
-  lotQuantity: string;
-  inspector: string;
-  sampleSize: string;
-  defectiveCount: string;
-  judgement: string;
-  strictnessAdjustment: string;
-  selections: {
-    A: boolean;
-    B: boolean;
-    C: boolean;
-    D: boolean;
-  };
-  destination: string;
-  groupLeaderConfirmation: string;
-  qualitySummary: string;
-  remarks: string;
-  supplier?: string;
-  partscode?: string;
-}
+import { ProductData } from "@/types/product-data";
 
 interface BarcodeScannerProps {
   barcode: string;
