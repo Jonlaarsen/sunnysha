@@ -32,6 +32,37 @@ interface ProductData {
   partscode?: string;
 }
 
+type SqlProductRecord = {
+  supplier?: string;
+  Supplier?: string;
+  po?: string;
+  PO?: string;
+  partscode?: string;
+  Partscode?: string;
+  Date?: string;
+  date?: string;
+  ShouHuo_Date?: string;
+  shouHuo_Date?: string;
+  qty?: number | string;
+  Qty?: number | string;
+  [key: string]: unknown;
+};
+
+type PhotoRecord = {
+  PhotoUrl?: string;
+  photoUrl?: string;
+};
+
+type SqlServerResponse = {
+  recordsets?: SqlProductRecord[][];
+  recordset?: SqlProductRecord[];
+};
+
+type PhotosApiResponse = {
+  recordsets?: unknown[];
+  photos?: unknown;
+};
+
 const QcComponent = () => {
   const [barcode, setBarcode] = useState("");
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -73,14 +104,17 @@ const QcComponent = () => {
       }
 
       // SQL Server response format (returns recordset)
-      const sqlServerResponse = await response.json();
+      const sqlServerResponse: SqlServerResponse = await response.json();
       
       // Transform SQL Server recordset format to ProductData
       // The query returns: supplier, po, partscode, Date (ShouHuo_Date), qty (sum)
-      const record = sqlServerResponse.recordsets?.[0]?.[0] || sqlServerResponse.recordset?.[0] || sqlServerResponse;
+      const record: SqlProductRecord =
+        sqlServerResponse.recordsets?.[0]?.[0] ||
+        sqlServerResponse.recordset?.[0] ||
+        sqlServerResponse;
       
       // Format date if it exists
-      const formatDate = (dateValue: any): string => {
+      const formatDate = (dateValue: unknown): string => {
         if (!dateValue) return "";
         if (dateValue instanceof Date) {
           return dateValue.toISOString().split('T')[0];
@@ -132,9 +166,22 @@ const QcComponent = () => {
       });
 
       if (photosResponse.ok) {
-        const photosData = await photosResponse.json();
-        const photoUrls = photosData.recordsets?.[0]?.map((p: any) => p.PhotoUrl || p.photoUrl) || 
-                         photosData.photos || [];
+        const photosData: PhotosApiResponse = await photosResponse.json();
+        const firstRecordset = Array.isArray(photosData.recordsets)
+          ? photosData.recordsets[0]
+          : undefined;
+        const recordsetPhotos = Array.isArray(firstRecordset)
+          ? (firstRecordset as PhotoRecord[])
+          : [];
+        const extractedUrls = recordsetPhotos
+          .map((p) => p.PhotoUrl ?? p.photoUrl)
+          .filter((url): url is string => typeof url === "string" && url.length > 0);
+        const fallbackPhotos = Array.isArray(photosData.photos)
+          ? (photosData.photos as unknown[])
+              .filter((url): url is string => typeof url === "string")
+          : [];
+        const photoUrls =
+          extractedUrls.length > 0 ? extractedUrls : fallbackPhotos;
         setPhotos(photoUrls);
       } else {
         // Fallback to mock photos if SQL Server doesn't return photos

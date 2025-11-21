@@ -82,22 +82,24 @@ export async function GET(req: NextRequest) {
       recordsets: [result.recordset],
       recordset: result.recordset,
     });
-  } catch (error: any) {
-    console.error("SQL Server error:", error);
+  } catch (error: unknown) {
+    const normalizedError =
+      error instanceof Error ? error : new Error("Unknown error");
+    console.error("SQL Server error:", normalizedError);
     
     // Close connection pool on error if it exists
     if (pool) {
       try {
         await pool.close();
       } catch (closeError) {
-        // Ignore close errors
+        console.error("Failed to close SQL connection pool:", closeError);
       }
     }
 
     return NextResponse.json(
       {
         error: "Failed to fetch data from SQL Server",
-        details: error.message || "Unknown error",
+        details: normalizedError.message || "Unknown error",
       },
       { status: 500 }
     );

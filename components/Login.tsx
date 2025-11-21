@@ -4,35 +4,41 @@ import React, { useState } from "react";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loggedin, SetLoggedin] = useState(false);
-  const handleLogin = () => {
-    if (username === "admin" && password === "password") {
-      SetLoggedin(true);
-      alert("Login successful!");
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (username.trim() === "admin" && password === "password") {
+      setStatusMessage("Login successful!");
     } else {
-      alert("Invalid credentials. Please try again.");
+      setStatusMessage("Invalid credentials. Please try again.");
     }
   };
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="flex flex-col items-center justify-center border-2 rounded-3xl h-100 w-auto">
         <h1>LOGIN</h1>
-        <form action="submit">
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
+            value={username}
             className="p-4 border rounded-2xl"
-            onSubmit={() => setUsername(username)}
-            //   value={password}
+            onChange={(event) => setUsername(event.target.value)}
             type="text"
             placeholder="username"
           ></input>
           <input
             value={password}
             className="p-4 border rounded-2xl"
-            onSubmit={() => setPassword(password)}
+            onChange={(event) => setPassword(event.target.value)}
             type="password"
             placeholder="password"
           ></input>
-          <button className="px-2 border rounded-2xl">Login</button>
+          <button type="submit" className="px-2 border rounded-2xl">
+            Login
+          </button>
+          {statusMessage && (
+            <p className="text-sm text-center text-gray-600">{statusMessage}</p>
+          )}
         </form>
       </div>
     </div>

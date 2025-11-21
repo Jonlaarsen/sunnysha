@@ -22,9 +22,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-blue-50/50">
+    <div className="min-h-screen py-10 flex flex-col w-full bg-gradient-to-br from-slate-400 via-indigo-500 to-sky-300">
       {!loggedin ? (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-sky-800 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-400 via-indigo-500 to-sky-300 px-4">
           <div className="w-full max-w-md bg-white/95 border border-white/40 backdrop-blur shadow-2xl rounded-3xl px-10 py-12 space-y-8">
             <div className="text-center space-y-2">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 text-2xl font-extrabold shadow-inner">

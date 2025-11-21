@@ -1,4 +1,9 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
 import {
   FaArrowLeft,
   FaCheck,
@@ -84,6 +89,17 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
     const [originalRecord, setOriginalRecord] = useState<FormData | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
+
+    useEffect(() => {
+      if (fetchedData) {
+        setCurrentForm((prev) => ({
+          ...prev,
+          ...fetchedData,
+          deliveryDate: getToday(),
+          inspectionDate: getToday(),
+        }));
+      }
+    }, [fetchedData]);
 
     const handleInputChange = (field: keyof FormData, value: string) => {
       let nextValue = value;
@@ -272,13 +288,15 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
     };
 
     const populateFormWithBarcodeData = (data: FormData) => {
-      setCurrentForm({
+      const updatedData = {
         ...data,
         deliveryDate: getToday(),
         inspectionDate: getToday(),
         partscode: data.partscode || "",
         supplier: data.supplier || "",
-      });
+      };
+      setCurrentForm(updatedData);
+      onPopulateForm?.(updatedData);
 
       // Show success toast
       toast.success("表单已自动填充！", {
@@ -1307,6 +1325,6 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
   }
 );
 
-// FormFieldsTwo.displayName = 'FormFieldsTwo';
+FormFieldsTwo.displayName = "FormFieldsTwo";
 
 export default FormFieldsTwo;
