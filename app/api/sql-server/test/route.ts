@@ -1,3 +1,12 @@
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  return NextResponse.json({
+    message: "SQL Server test endpoint is not configured",
+  }, { status: 501 });
+}
+
+
 // import { NextResponse } from "next/server";
 // import { getSqlServerConfig } from "@/lib/sql-server-config";
 // import sql from "mssql";
