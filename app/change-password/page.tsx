@@ -24,7 +24,6 @@ export default function ChangePasswordPage() {
         router.push("/");
         return;
       }
-      setUser(currentUser);
       setCheckingAuth(false);
     });
 
