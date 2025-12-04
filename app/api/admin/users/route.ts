@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getAuthenticatedUser } from "@/lib/supabase-server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // Check if current user is admin
     const currentUser = await getAuthenticatedUser();

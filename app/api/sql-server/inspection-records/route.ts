@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
     const supplier = req.nextUrl.searchParams.get("supplier");
     const date = req.nextUrl.searchParams.get("date");
     const limit = req.nextUrl.searchParams.get("limit");
-    const offset = req.nextUrl.searchParams.get("offset");
 
     // Connect to SQL Server
     const config = getSqlServerConfig();

@@ -143,7 +143,7 @@ export default function CreateUserModal({
                   <p className="font-semibold mb-2">How it works:</p>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>User account will be created in Supabase</li>
-                    <li>Account setup link will be sent to the user's email</li>
+                    <li>Account setup link will be sent to the user&apos;s email</li>
                     <li>User will set their own password using the secure link</li>
                     <li>Setup links expire in 24 hours for security</li>
                   </ul>

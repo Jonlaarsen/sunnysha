@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/supabase-server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const user = await getAuthenticatedUser();
     
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       authenticated: true,
       email: user.email,
     });
-  } catch (error: unknown) {
+  } catch {
     return NextResponse.json(
       { isAdmin: false, authenticated: false },
       { status: 200 }

@@ -448,7 +448,32 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         toast.dismiss(loadingToast);
 
         // Transform Supabase records to FormData format
-        const historyRecords: FormData[] = (result.data || []).map((record: any) => ({
+        interface SupabaseRecord {
+          id: number;
+          partscode?: string | null;
+          supplier?: string | null;
+          po_number?: string | null;
+          delivery_date?: string | null;
+          inspection_date?: string | null;
+          delivery_quantity?: number | null;
+          return_quantity?: number | null;
+          lot_number?: string | null;
+          lot_quantity?: number | null;
+          inspector?: string | null;
+          sample_size?: number | null;
+          defective_count?: number | null;
+          judgement?: string | null;
+          strictness_adjustment?: string | null;
+          selection_a?: boolean | null;
+          selection_b?: boolean | null;
+          selection_c?: boolean | null;
+          selection_d?: boolean | null;
+          destination?: string | null;
+          group_leader_confirmation?: string | null;
+          quality_summary?: string | null;
+          remarks?: string | null;
+        }
+        const historyRecords: FormData[] = (result.data || []).map((record: SupabaseRecord) => ({
           id: record.id,
           partscode: record.partscode || "",
           supplier: record.supplier || "",

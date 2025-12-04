@@ -5,21 +5,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FaUserPlus, FaUsers, FaCheck, FaTimes, FaSpinner } from "react-icons/fa";
 
-interface User {
-  id: string;
-  email: string;
-  created_at: string;
-  user_metadata?: {
-    name?: string;
-  };
-}
 
 export default function AdminPage() {
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -37,8 +26,6 @@ export default function AdminPage() {
         return;
       }
 
-      setUser(currentUser);
-
       // Check if user is admin via API
       try {
         const response = await fetch("/api/admin/check");
@@ -52,7 +39,6 @@ export default function AdminPage() {
 
         setIsAdmin(true);
         setLoading(false);
-        loadUsers();
       } catch (error) {
         console.error("Error checking admin status:", error);
         toast.error("Error verifying admin access.");
@@ -68,20 +54,8 @@ export default function AdminPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [router, supabase.auth]);
 
-  const loadUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      // Note: In production, you'd want a proper API endpoint to fetch users
-      // For now, we'll show a message that users can be managed via Supabase dashboard
-      // or create an API endpoint to list users
-      setLoadingUsers(false);
-    } catch (error) {
-      console.error("Error loading users:", error);
-      setLoadingUsers(false);
-    }
-  };
 
   const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -247,9 +221,9 @@ export default function AdminPage() {
                   How It Works
                 </h3>
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                  <li>Enter user email and optional name, then click "Create User"</li>
+                  <li>Enter user email and optional name, then click &quot;Create User&quot;</li>
                   <li>User account will be created in Supabase</li>
-                  <li>Account setup link will be sent to the user's email</li>
+                  <li>Account setup link will be sent to the user&apos;s email</li>
                   <li>User will set their own password using the secure link</li>
                 </ul>
               </div>

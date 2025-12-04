@@ -29,7 +29,7 @@ export default function SetupPasswordPage() {
     };
 
     checkToken();
-  }, []);
+  }, [router]);
 
   const validatePassword = (pwd: string): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];

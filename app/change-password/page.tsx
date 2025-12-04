@@ -14,7 +14,6 @@ export default function ChangePasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -37,7 +36,7 @@ export default function ChangePasswordPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [router, supabase.auth]);
 
   const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];

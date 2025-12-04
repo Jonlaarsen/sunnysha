@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Execute query
-    const { data, error, count } = await query;
+    const { data, error } = await query;
 
     if (error) {
       console.error("Supabase error:", error);

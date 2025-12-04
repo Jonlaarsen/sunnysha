@@ -30,7 +30,7 @@ interface QCRecord {
   remarks?: string | null;
   created_at: string;
   updated_at?: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface UserRecordsModalProps {
@@ -131,7 +131,7 @@ export default function UserRecordsModal({
     }
   };
 
-  const formatValue = (value: any): string => {
+  const formatValue = (value: unknown): string => {
     if (value === null || value === undefined) return "-";
     if (typeof value === "boolean") return value ? "Yes" : "No";
     return String(value);

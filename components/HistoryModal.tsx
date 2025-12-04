@@ -11,7 +11,7 @@ interface HistoryRecord {
   delivery_date: string | null;
   inspection_date: string | null;
   created_at: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface HistoryModalProps {

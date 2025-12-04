@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSqlServerConfig } from "@/lib/sql-server-config";
 import sql from "mssql";
 

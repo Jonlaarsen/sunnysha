@@ -14,9 +14,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || "QC System <noreply@yourdomain.com>",
       to: email,
       subject: "Set Up Your QC System Account",
