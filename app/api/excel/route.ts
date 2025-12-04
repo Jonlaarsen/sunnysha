@@ -31,14 +31,6 @@ async function readExcelFile(filePath: string): Promise<SheetData[]> {
 
 export async function GET() {
   try {
-    // Check if directory exists (Vercel doesn't have persistent file system)
-    try {
-      await fs.access(EXCEL_DIR);
-    } catch {
-      // Directory doesn't exist on Vercel - return empty array
-      return NextResponse.json([]);
-    }
-
     const entries = await fs.readdir(EXCEL_DIR);
     const excelFiles = entries.filter((entry) =>
       entry.toLowerCase().match(/\.xls[x]?$/),
@@ -56,8 +48,10 @@ export async function GET() {
     return NextResponse.json(payload);
   } catch (error) {
     console.error("Failed to load Excel files", error);
-    // Return empty array instead of error for Vercel compatibility
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { message: "Unable to load Excel files." },
+      { status: 500 },
+    );
   }
 }
 

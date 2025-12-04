@@ -10,6 +10,7 @@ interface HistoryRecord {
   po_number: string | null;
   delivery_date: string | null;
   inspection_date: string | null;
+  judgement?: string | null;
   created_at: string;
   [key: string]: unknown;
 }
@@ -156,7 +157,7 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
                       </div>
                     </div>
                   </div>
-                  {record.judgement && (
+                  {record.judgement && typeof record.judgement === 'string' && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <div className="text-sm text-gray-500 mb-1">判定</div>
                       <div className="font-semibold text-gray-800">
