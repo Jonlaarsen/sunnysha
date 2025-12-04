@@ -1,68 +1,73 @@
 import { NextResponse } from "next/server";
+import { getSqlServerConfig } from "@/lib/sql-server-config";
+import sql from "mssql";
 
 export async function GET() {
-  return NextResponse.json({
-    message: "SQL Server test endpoint is not configured",
-  }, { status: 501 });
-}
-
-
-// import { NextResponse } from "next/server";
-// import { getSqlServerConfig } from "@/lib/sql-server-config";
-// import sql from "mssql";
-
-// export async function GET() {
-//   let pool: sql.ConnectionPool | null = null;
+  let pool: sql.ConnectionPool | null = null;
   
-//   try {
-//     const config = getSqlServerConfig();
-//     // Test connection
-//     pool = await sql.connect(config);
+  try {
+    const config = getSqlServerConfig();
     
-//     // Test query - get SQL Server version
-//     const result = await pool.request().query("SELECT @@VERSION as version, DB_NAME() as current_database");
+    // Check if SQL Server is configured
+    if (!config.database || !config.user || !config.password) {
+      return NextResponse.json({
+        success: false,
+        message: "SQL Server is not configured. Please set environment variables.",
+        config: {
+          server: config.server,
+          database: config.database || "Not set",
+          port: config.port,
+        },
+      }, { status: 503 });
+    }
     
-//     await pool.close();
+    // Test connection
+    pool = await sql.connect(config);
     
-//     return NextResponse.json({
-//       success: true,
-//       message: "Connected to SQL Server successfully",
-//       version: result.recordset[0]?.version || "Unknown",
-//       database: result.recordset[0]?.current_database || "Unknown",
-//       config: {
-//         server: config.server,
-//         database: config.database,
-//         port: config.port,
-//         // Don't expose password
-//       },
-//     });
-//   } catch (error: unknown) {
-//     const normalizedError =
-//       error instanceof Error ? error : new Error("Unknown error");
-//     console.error("SQL Server connection error:", normalizedError);
+    // Test query - get SQL Server version
+    const result = await pool.request().query("SELECT @@VERSION as version, DB_NAME() as current_database");
     
-//     if (pool) {
-//       try {
-//         await pool.close();
-//       } catch (closeError) {
-//         console.error("Failed to close SQL connection:", closeError);
-//       }
-//     }
+    await pool.close();
+    
+    return NextResponse.json({
+      success: true,
+      message: "Connected to SQL Server successfully",
+      version: result.recordset[0]?.version || "Unknown",
+      database: result.recordset[0]?.current_database || "Unknown",
+      config: {
+        server: config.server,
+        database: config.database,
+        port: config.port,
+        // Don't expose password
+      },
+    });
+  } catch (error: unknown) {
+    const normalizedError =
+      error instanceof Error ? error : new Error("Unknown error");
+    console.error("SQL Server connection error:", normalizedError);
+    
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (closeError) {
+        console.error("Failed to close SQL connection:", closeError);
+      }
+    }
 
-//     return NextResponse.json(
-//       {
-//         success: false,
-//         error: normalizedError.message,
-//         message: "Failed to connect to SQL Server. Please check your connection settings.",
-//         config: {
-//           server: config.server,
-//           database: config.database,
-//           port: config.port,
-//           // Don't expose password
-//         },
-//       },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return NextResponse.json(
+      {
+        success: false,
+        error: normalizedError.message,
+        message: "Failed to connect to SQL Server. Please check your connection settings.",
+        config: {
+          server: getSqlServerConfig().server,
+          database: getSqlServerConfig().database || "Not set",
+          port: getSqlServerConfig().port,
+          // Don't expose password
+        },
+      },
+      { status: 500 }
+    );
+  }
+}
 

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSqlServerConfig } from "@/lib/sql-server-config";
 import sql from "mssql";
-import fs from "fs/promises";
-import path from "path";
 
 export async function GET(req: NextRequest) {
   let pool: sql.ConnectionPool | null = null;
@@ -19,16 +17,25 @@ export async function GET(req: NextRequest) {
     }
 
     if (mock === "true") {
-      const mockPath = path.join(
-        process.cwd(),
-        "app",
-        "api",
-        "sql-server",
-        "product",
-        "test-data.json"
-      );
-      const mockContent = await fs.readFile(mockPath, "utf-8");
-      const mockData = JSON.parse(mockContent);
+      // Mock data for testing (Vercel doesn't have persistent file system)
+      const mockData = {
+        recordsets: [[
+          {
+            supplier: "Test Supplier",
+            po: "PO12345",
+            partscode: barcode || "TEST123",
+            Date: new Date().toISOString().split('T')[0],
+            qty: 100
+          }
+        ]],
+        recordset: [{
+          supplier: "Test Supplier",
+          po: "PO12345",
+          partscode: barcode || "TEST123",
+          Date: new Date().toISOString().split('T')[0],
+          qty: 100
+        }]
+      };
       return NextResponse.json(mockData);
     }
 
