@@ -9,8 +9,10 @@ import {
   FaCheck,
   FaCheckCircle,
   FaClipboard,
+  FaHistory,
   FaPen,
   FaPlus,
+  FaSpinner,
   FaTrash,
 } from "react-icons/fa";
 import { FaX } from "react-icons/fa6";
@@ -18,6 +20,7 @@ import { IoWarning } from "react-icons/io5";
 import toast from "react-hot-toast";
 
 interface FormData {
+  id?: number; // Supabase record ID (optional, only present after saving to database)
   partscode: string;
   supplier: string;
   poNumber: string;
@@ -46,7 +49,6 @@ interface FormData {
 
 interface FormFieldsTwoProps {
   fetchedData?: FormData;
-  onPopulateForm?: (data: FormData) => void;
 }
 
 export interface FormFieldsTwoRef {
@@ -54,7 +56,7 @@ export interface FormFieldsTwoRef {
 }
 
 const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
-  ({ fetchedData, onPopulateForm }, ref) => {
+  ({ fetchedData }, ref) => {
     const getToday = () => new Date().toISOString().split("T")[0];
 
     const [currentForm, setCurrentForm] = useState<FormData>({
@@ -89,6 +91,10 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
     const [originalRecord, setOriginalRecord] = useState<FormData | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     useEffect(() => {
       if (fetchedData) {
@@ -184,15 +190,93 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       }
     };
 
-    const saveCurrentRecord = () => {
-      // Save current form data to saved records (latest record at the top)
-      setSavedRecords((prev) => [{ ...currentForm }, ...prev]);
+    const saveCurrentRecord = async () => {
+      // Prevent multiple submissions
+      if (isSaving) {
+        return;
+      }
 
-      // Show success toast
-      toast.success("检查记录已成功保存！", {
-        duration: 3000,
-        icon: <FaCheckCircle />,
-      });
+      // Validate required fields
+      if (!currentForm.partscode || !currentForm.supplier) {
+        toast.error("部品番号和供方为必填项！", {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        return;
+      }
+
+      setIsSaving(true);
+
+      try {
+        // Show loading toast
+        const loadingToast = toast.loading("正在保存检查记录...", {
+          icon: "💾",
+        });
+
+        // Send POST request to API
+        const response = await fetch("/api/qc/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(currentForm),
+        });
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        let result;
+        
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error("Failed to parse response:", parseError);
+          throw new Error("服务器响应格式错误，请重试");
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || result.error || "保存失败");
+        }
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Transform Supabase response to FormData format and include the ID
+        const savedRecord: FormData = {
+          id: result.data?.id, // Store the Supabase ID
+          partscode: result.data?.partscode || currentForm.partscode,
+          supplier: result.data?.supplier || currentForm.supplier,
+          poNumber: result.data?.po_number || currentForm.poNumber,
+          deliveryDate: result.data?.delivery_date || currentForm.deliveryDate,
+          inspectionDate: result.data?.inspection_date || currentForm.inspectionDate,
+          deliveryQuantity: result.data?.delivery_quantity?.toString() || currentForm.deliveryQuantity,
+          returnQuantity: result.data?.return_quantity?.toString() || currentForm.returnQuantity,
+          lotNumber: result.data?.lot_number || currentForm.lotNumber,
+          lotQuantity: result.data?.lot_quantity?.toString() || currentForm.lotQuantity,
+          inspector: result.data?.inspector || currentForm.inspector,
+          sampleSize: result.data?.sample_size?.toString() || currentForm.sampleSize,
+          defectiveCount: result.data?.defective_count?.toString() || currentForm.defectiveCount,
+          judgement: result.data?.judgement || currentForm.judgement,
+          strictnessAdjustment: result.data?.strictness_adjustment || currentForm.strictnessAdjustment,
+          selections: {
+            A: result.data?.selection_a || currentForm.selections.A,
+            B: result.data?.selection_b || currentForm.selections.B,
+            C: result.data?.selection_c || currentForm.selections.C,
+            D: result.data?.selection_d || currentForm.selections.D,
+          },
+          destination: result.data?.destination || currentForm.destination,
+          groupLeaderConfirmation: result.data?.group_leader_confirmation || currentForm.groupLeaderConfirmation,
+          qualitySummary: result.data?.quality_summary || currentForm.qualitySummary,
+          remarks: result.data?.remarks || currentForm.remarks,
+        };
+
+        // Save current form data to saved records (latest record at the top)
+        setSavedRecords((prev) => [savedRecord, ...prev]);
+
+        // Show success toast
+        toast.success(result.message || "检查记录已成功保存！", {
+          duration: 3000,
+          icon: <FaCheckCircle />,
+        });
 
       // Clear the current form
       setCurrentForm({
@@ -221,6 +305,17 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         qualitySummary: "",
         remarks: "",
       });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "保存失败，请重试";
+        toast.error(errorMessage, {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        console.error("Error saving record:", error);
+      } finally {
+        setIsSaving(false);
+      }
     };
 
     const deleteRecord = (index: number) => {
@@ -228,17 +323,82 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
-      if (recordToDelete !== null) {
+    const confirmDelete = async () => {
+      if (recordToDelete === null) return;
+
+      // Prevent multiple deletions
+      if (isDeleting) {
+        return;
+      }
+
+      const recordToDeleteData = savedRecords[recordToDelete];
+
+      // If record doesn't have an ID, it was never saved to database, just remove from local state
+      if (!recordToDeleteData.id) {
+        setSavedRecords((prev) => prev.filter((_, i) => i !== recordToDelete));
+        setShowDeleteModal(false);
+        setRecordToDelete(null);
+        toast.success("检查记录已成功删除！", {
+          duration: 3000,
+          icon: <FaTrash />,
+        });
+        return;
+      }
+
+      setIsDeleting(true);
+
+      try {
+        // Show loading toast
+        const loadingToast = toast.loading("正在删除检查记录...", {
+          icon: "🗑️",
+        });
+
+        // Send DELETE request to API
+        const response = await fetch(`/api/qc/delete?id=${recordToDeleteData.id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        let result;
+        
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error("Failed to parse response:", parseError);
+          throw new Error("服务器响应格式错误，请重试");
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || result.error || "删除失败");
+        }
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Remove from local state only after successful API deletion
         setSavedRecords((prev) => prev.filter((_, i) => i !== recordToDelete));
         setShowDeleteModal(false);
         setRecordToDelete(null);
 
         // Show success toast
-        toast.success("检查记录已成功删除！", {
+        toast.success(result.message || "检查记录已成功删除！", {
           duration: 3000,
           icon: <FaTrash />,
         });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "删除失败，请重试";
+        toast.error(errorMessage, {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        console.error("Error deleting record:", error);
+      } finally {
+        setIsDeleting(false);
       }
     };
 
@@ -247,21 +407,214 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       setRecordToDelete(null);
     };
 
+    const loadHistory = async () => {
+      // Prevent multiple requests
+      if (isLoadingHistory) {
+        return;
+      }
+
+      setIsLoadingHistory(true);
+
+      try {
+        // Show loading toast
+        const loadingToast = toast.loading("正在加载历史记录...", {
+          icon: "📋",
+        });
+
+        // Fetch latest 10 records from API
+        const response = await fetch("/api/qc/records?limit=10", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        let result;
+        
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error("Failed to parse response:", parseError);
+          throw new Error("服务器响应格式错误，请重试");
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || result.error || "加载失败");
+        }
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Transform Supabase records to FormData format
+        const historyRecords: FormData[] = (result.data || []).map((record: any) => ({
+          id: record.id,
+          partscode: record.partscode || "",
+          supplier: record.supplier || "",
+          poNumber: record.po_number || "",
+          deliveryDate: record.delivery_date || "",
+          inspectionDate: record.inspection_date || "",
+          deliveryQuantity: record.delivery_quantity?.toString() || "",
+          returnQuantity: record.return_quantity?.toString() || "",
+          lotNumber: record.lot_number || "",
+          lotQuantity: record.lot_quantity?.toString() || "",
+          inspector: record.inspector || "",
+          sampleSize: record.sample_size?.toString() || "",
+          defectiveCount: record.defective_count?.toString() || "",
+          judgement: record.judgement || "",
+          strictnessAdjustment: record.strictness_adjustment || "",
+          selections: {
+            A: record.selection_a || false,
+            B: record.selection_b || false,
+            C: record.selection_c || false,
+            D: record.selection_d || false,
+          },
+          destination: record.destination || "",
+          groupLeaderConfirmation: record.group_leader_confirmation || "",
+          qualitySummary: record.quality_summary || "",
+          remarks: record.remarks || "",
+        }));
+
+        // Replace savedRecords with history (or merge if preferred)
+        setSavedRecords(historyRecords);
+
+        // Show success toast
+        toast.success(`已加载 ${historyRecords.length} 条历史记录`, {
+          duration: 3000,
+          icon: <FaHistory />,
+        });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "加载失败，请重试";
+        toast.error(errorMessage, {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        console.error("Error loading history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
     const editRecord = (index: number) => {
       const recordToEdit = savedRecords[index];
       setOriginalRecord({ ...recordToEdit }); // Store original data
       setEditingIndex(index);
     };
 
-    const saveEdit = () => {
-      setEditingIndex(null);
-      setOriginalRecord(null);
+    const saveEdit = async () => {
+      if (editingIndex === null) return;
 
-      // Show success toast
-      toast.success("检查记录已成功更新！", {
-        duration: 3000,
-        icon: <FaPen />,
-      });
+      // Prevent multiple submissions
+      if (isUpdating) {
+        return;
+      }
+
+      const recordToUpdate = savedRecords[editingIndex];
+
+      // Check if record has an ID (was saved to Supabase)
+      if (!recordToUpdate.id) {
+        toast.error("无法更新：记录尚未保存到数据库", {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        return;
+      }
+
+      setIsUpdating(true);
+
+      try {
+        // Show loading toast
+        const loadingToast = toast.loading("正在更新检查记录...", {
+          icon: "💾",
+        });
+
+        // Send PATCH request to update API
+        const response = await fetch("/api/qc/update", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: recordToUpdate.id,
+            ...recordToUpdate,
+          }),
+        });
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        let result;
+        
+        try {
+          result = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+          console.error("Failed to parse response:", parseError);
+          throw new Error("服务器响应格式错误，请重试");
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || result.error || "更新失败");
+        }
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+
+        // Transform Supabase response to FormData format
+        const updatedRecord: FormData = {
+          id: result.data?.id || recordToUpdate.id,
+          partscode: result.data?.partscode || recordToUpdate.partscode,
+          supplier: result.data?.supplier || recordToUpdate.supplier,
+          poNumber: result.data?.po_number || recordToUpdate.poNumber,
+          deliveryDate: result.data?.delivery_date || recordToUpdate.deliveryDate,
+          inspectionDate: result.data?.inspection_date || recordToUpdate.inspectionDate,
+          deliveryQuantity: result.data?.delivery_quantity?.toString() || recordToUpdate.deliveryQuantity,
+          returnQuantity: result.data?.return_quantity?.toString() || recordToUpdate.returnQuantity,
+          lotNumber: result.data?.lot_number || recordToUpdate.lotNumber,
+          lotQuantity: result.data?.lot_quantity?.toString() || recordToUpdate.lotQuantity,
+          inspector: result.data?.inspector || recordToUpdate.inspector,
+          sampleSize: result.data?.sample_size?.toString() || recordToUpdate.sampleSize,
+          defectiveCount: result.data?.defective_count?.toString() || recordToUpdate.defectiveCount,
+          judgement: result.data?.judgement || recordToUpdate.judgement,
+          strictnessAdjustment: result.data?.strictness_adjustment || recordToUpdate.strictnessAdjustment,
+          selections: {
+            A: result.data?.selection_a ?? recordToUpdate.selections.A,
+            B: result.data?.selection_b ?? recordToUpdate.selections.B,
+            C: result.data?.selection_c ?? recordToUpdate.selections.C,
+            D: result.data?.selection_d ?? recordToUpdate.selections.D,
+          },
+          destination: result.data?.destination || recordToUpdate.destination,
+          groupLeaderConfirmation: result.data?.group_leader_confirmation || recordToUpdate.groupLeaderConfirmation,
+          qualitySummary: result.data?.quality_summary || recordToUpdate.qualitySummary,
+          remarks: result.data?.remarks || recordToUpdate.remarks,
+        };
+
+        // Update the record in savedRecords with the updated data
+        setSavedRecords((prev) =>
+          prev.map((record, index) =>
+            index === editingIndex ? updatedRecord : record
+          )
+        );
+
+        setEditingIndex(null);
+        setOriginalRecord(null);
+
+        // Show success toast
+        toast.success(result.message || "检查记录已成功更新！", {
+          duration: 3000,
+          icon: <FaPen />,
+        });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "更新失败，请重试";
+        toast.error(errorMessage, {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        console.error("Error updating record:", error);
+      } finally {
+        setIsUpdating(false);
+      }
     };
 
     const cancelEdit = () => {
@@ -296,7 +649,6 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         supplier: data.supplier || "",
       };
       setCurrentForm(updatedData);
-      onPopulateForm?.(updatedData);
 
       // Show success toast
       toast.success("表单已自动填充！", {
@@ -561,15 +913,28 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
           <h1 className="text-4xl font-semibold pb-4 underline underline-offset-6 text-center">
             受入检查经历
           </h1>
-          <button
-            onClick={saveCurrentRecord}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
-          >
-            <span className="text-lg">
-              <FaPlus />
-            </span>
-            添加新的检查记录
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={loadHistory}
+              disabled={isLoadingHistory}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="text-lg">
+                {isLoadingHistory ? <FaSpinner className="animate-spin" /> : <FaHistory />}
+              </span>
+              {isLoadingHistory ? "加载中..." : "历史记录"}
+            </button>
+            <button
+              onClick={saveCurrentRecord}
+              disabled={isSaving}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="text-lg">
+                {isSaving ? <FaSpinner className="animate-spin" /> : <FaPlus />}
+              </span>
+              {isSaving ? "正在保存..." : "添加新的检查记录"}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-13 h-15 border-x border-t ">
           <div className="flex pl-2 col-span-2 border text-zinc-600 text-xl">
@@ -685,10 +1050,11 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                 <>
                   <button
                     onClick={saveEdit}
-                    className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200"
-                    title="Save changes"
+                    disabled={isUpdating}
+                    className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={isUpdating ? "Saving..." : "Save changes"}
                   >
-                    <FaCheck />
+                    {isUpdating ? <FaSpinner className="animate-spin" /> : <FaCheck />}
                   </button>
                   <button
                     onClick={cancelEdit}
@@ -1306,15 +1672,24 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
               <div className="flex space-x-3 justify-end">
                 <button
                   onClick={cancelDelete}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  disabled={isDeleting}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   取消
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
+                  disabled={isDeleting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  删除
+                  {isDeleting ? (
+                    <>
+                      <FaSpinner className="animate-spin" />
+                      删除中...
+                    </>
+                  ) : (
+                    "删除"
+                  )}
                 </button>
               </div>
             </div>

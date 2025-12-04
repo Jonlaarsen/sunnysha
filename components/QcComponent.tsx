@@ -248,11 +248,7 @@ const QcComponent = () => {
         isScanning={isScanning}
         onPopulateForm={handlePopulateForm}
       />
-      <FormFieldsTwo 
-        ref={formRef}
-        fetchedData={fetchedData}
-        onPopulateForm={handlePopulateForm}
-      />
+      <FormFieldsTwo ref={formRef} fetchedData={fetchedData} />
       {/* Photo Gallery Section */}
       <PhotoGallery photos={photos} onPhotoClick={openPhotoModal} />
 

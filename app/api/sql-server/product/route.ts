@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSqlServerConfig } from "@/lib/sql-server-config";
 import sql from "mssql";
 import fs from "fs/promises";
 import path from "path";
-
-// SQL Server connection configuration
-// These should be set as environment variables in production
-const config: sql.config = {
-  server: process.env.SQL_SERVER || "localhost",
-  database: process.env.SQL_DATABASE || "",
-  user: process.env.SQL_USER || "",
-  password: process.env.SQL_PASSWORD || "",
-  options: {
-    encrypt: process.env.SQL_ENCRYPT === "true", // Use true for Azure SQL
-    trustServerCertificate: process.env.SQL_TRUST_CERT === "true", // Use true for local dev
-    enableArithAbort: true,
-  },
-  port: parseInt(process.env.SQL_PORT || "1433"),
-};
 
 export async function GET(req: NextRequest) {
   let pool: sql.ConnectionPool | null = null;
@@ -47,6 +33,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Connect to SQL Server (uses connection pooling)
+    const config = getSqlServerConfig();
     pool = await sql.connect(config);
 
     // SQL query with parameterized barcode
