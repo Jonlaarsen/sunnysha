@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaTimes, FaSpinner, FaCalendar, FaUser, FaBox } from "react-icons/fa";
+import { FaTimes, FaSpinner, FaCalendar, FaBox } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 interface HistoryRecord {

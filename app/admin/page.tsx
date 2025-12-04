@@ -87,9 +87,6 @@ export default function AdminPage() {
       // Reset form
       setEmail("");
       setName("");
-
-      // Reload users list
-      loadUsers();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create user";

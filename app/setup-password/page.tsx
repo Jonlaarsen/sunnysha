@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FaLock, FaCheck, FaTimes, FaSpinner, FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -13,7 +13,6 @@ export default function SetupPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(true);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
