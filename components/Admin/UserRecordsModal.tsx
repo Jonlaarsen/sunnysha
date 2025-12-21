@@ -36,6 +36,8 @@ interface QCRecord {
 interface UserRecordsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSupplierFilter?: string;
+  initialUserFilter?: string; // Can be user_id or email
 }
 
 interface User {
@@ -46,6 +48,8 @@ interface User {
 export default function UserRecordsModal({
   isOpen,
   onClose,
+  initialSupplierFilter,
+  initialUserFilter,
 }: UserRecordsModalProps) {
   const [records, setRecords] = useState<QCRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,8 +61,17 @@ export default function UserRecordsModal({
     if (isOpen) {
       fetchRecords();
       fetchUsers();
+      // Set initial filter if provided (supplier takes precedence)
+      if (initialSupplierFilter) {
+        setSearchTerm(initialSupplierFilter);
+      } else if (initialUserFilter) {
+        setSearchTerm(initialUserFilter);
+      }
+    } else {
+      // Reset search term when modal closes
+      setSearchTerm("");
     }
-  }, [isOpen]);
+  }, [isOpen, initialSupplierFilter, initialUserFilter]);
 
   const fetchUsers = async () => {
     try {

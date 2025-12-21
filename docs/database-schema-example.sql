@@ -47,3 +47,4 @@ CREATE INDEX idx_inspection_date ON qc_records(inspection_date);
 
 
 
+

@@ -1,6 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaTimes, FaSpinner, FaEnvelope, FaCalendar } from "react-icons/fa";
+import {
+  FaTimes,
+  FaSpinner,
+  FaEnvelope,
+  FaCalendar,
+  FaExternalLinkAlt,
+  FaUser,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 
 interface User {
@@ -18,11 +25,13 @@ interface User {
 interface UsersListModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onUserClick?: (userEmail: string, userId: string) => void;
 }
 
 export default function UsersListModal({
   isOpen,
   onClose,
+  onUserClick,
 }: UsersListModalProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +50,9 @@ export default function UsersListModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || result.error || "Failed to fetch users");
+        throw new Error(
+          result.message || result.error || "Failed to fetch users"
+        );
       }
 
       setUsers(result.data || []);
@@ -75,7 +86,9 @@ export default function UsersListModal({
   const filteredUsers = users.filter(
     (user) =>
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.user_metadata?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.user_metadata?.name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       user.id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -88,7 +101,7 @@ export default function UsersListModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">
-              All Users
+              <FaUser className="text-purple-500 text-2xl" /> All Users
             </h2>
             <p className="text-sm text-gray-600 mt-1">
               {users.length} total users
@@ -122,7 +135,9 @@ export default function UsersListModal({
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
-                {searchTerm ? "No users found matching your search." : "No users found."}
+                {searchTerm
+                  ? "No users found matching your search."
+                  : "No users found."}
               </p>
             </div>
           ) : (
@@ -130,13 +145,19 @@ export default function UsersListModal({
               {filteredUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-indigo-400 hover:shadow-md transition-all"
+                  onClick={() => onUserClick?.(user.email, user.id)}
+                  className={`border border-gray-200 rounded-lg p-4 hover:border-indigo-400 hover:shadow-md transition-all ${
+                    onUserClick ? "cursor-pointer" : ""
+                  }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                           {user.user_metadata?.name || user.email.split("@")[0]}
+                          {onUserClick && (
+                            <FaExternalLinkAlt className="text-indigo-500 text-sm" />
+                          )}
                         </h3>
                         {user.user_metadata?.first_login && (
                           <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
@@ -149,6 +170,11 @@ export default function UsersListModal({
                           </span>
                         )}
                       </div>
+                      {onUserClick && (
+                        <p className="text-xs text-indigo-600 mb-2 font-medium">
+                          Click to view all records
+                        </p>
+                      )}
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <FaEnvelope className="text-gray-400" />
@@ -156,9 +182,7 @@ export default function UsersListModal({
                         </div>
                         <div className="flex items-center gap-2">
                           <FaCalendar className="text-gray-400" />
-                          <span>
-                            Created: {formatDate(user.created_at)}
-                          </span>
+                          <span>Created: {formatDate(user.created_at)}</span>
                         </div>
                         {user.last_sign_in_at && (
                           <div className="flex items-center gap-2">
@@ -196,4 +220,3 @@ export default function UsersListModal({
     </div>
   );
 }
-

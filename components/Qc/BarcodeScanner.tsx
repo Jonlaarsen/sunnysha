@@ -3,6 +3,7 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { ProductData } from "@/types/product-data";
+import { FaSpinner } from "react-icons/fa";
 
 interface BarcodeScannerProps {
   barcode: string;
@@ -148,7 +149,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                   onPopulateForm(fetchedData);
                   toast.success("正在填充表单...", {
                     duration: 2000,
-                    icon: "📋",
+                    icon: <FaSpinner className="animate-spin" />,
                   });
                 }}
                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1"
@@ -197,7 +198,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
             )}
             {fetchedData.deliveryDate && (
               <div>
-                <span className="font-medium text-gray-700">Delivery Date:</span>
+                <span className="font-medium text-gray-700">
+                  Delivery Date:
+                </span>
                 <span className="ml-2 text-gray-900">
                   {fetchedData.deliveryDate}
                 </span>

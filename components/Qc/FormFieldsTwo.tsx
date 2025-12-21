@@ -210,7 +210,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       try {
         // Show loading toast
         const loadingToast = toast.loading("正在保存检查记录...", {
-          icon: "💾",
+          icon: <FaSpinner className="animate-spin" />,
         });
 
         // Send POST request to API
@@ -225,7 +225,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         // Check if response has content before parsing JSON
         const text = await response.text();
         let result;
-        
+
         try {
           result = text ? JSON.parse(text) : {};
         } catch (parseError) {
@@ -247,16 +247,27 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
           supplier: result.data?.supplier || currentForm.supplier,
           poNumber: result.data?.po_number || currentForm.poNumber,
           deliveryDate: result.data?.delivery_date || currentForm.deliveryDate,
-          inspectionDate: result.data?.inspection_date || currentForm.inspectionDate,
-          deliveryQuantity: result.data?.delivery_quantity?.toString() || currentForm.deliveryQuantity,
-          returnQuantity: result.data?.return_quantity?.toString() || currentForm.returnQuantity,
+          inspectionDate:
+            result.data?.inspection_date || currentForm.inspectionDate,
+          deliveryQuantity:
+            result.data?.delivery_quantity?.toString() ||
+            currentForm.deliveryQuantity,
+          returnQuantity:
+            result.data?.return_quantity?.toString() ||
+            currentForm.returnQuantity,
           lotNumber: result.data?.lot_number || currentForm.lotNumber,
-          lotQuantity: result.data?.lot_quantity?.toString() || currentForm.lotQuantity,
+          lotQuantity:
+            result.data?.lot_quantity?.toString() || currentForm.lotQuantity,
           inspector: result.data?.inspector || currentForm.inspector,
-          sampleSize: result.data?.sample_size?.toString() || currentForm.sampleSize,
-          defectiveCount: result.data?.defective_count?.toString() || currentForm.defectiveCount,
+          sampleSize:
+            result.data?.sample_size?.toString() || currentForm.sampleSize,
+          defectiveCount:
+            result.data?.defective_count?.toString() ||
+            currentForm.defectiveCount,
           judgement: result.data?.judgement || currentForm.judgement,
-          strictnessAdjustment: result.data?.strictness_adjustment || currentForm.strictnessAdjustment,
+          strictnessAdjustment:
+            result.data?.strictness_adjustment ||
+            currentForm.strictnessAdjustment,
           selections: {
             A: result.data?.selection_a || currentForm.selections.A,
             B: result.data?.selection_b || currentForm.selections.B,
@@ -264,8 +275,11 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             D: result.data?.selection_d || currentForm.selections.D,
           },
           destination: result.data?.destination || currentForm.destination,
-          groupLeaderConfirmation: result.data?.group_leader_confirmation || currentForm.groupLeaderConfirmation,
-          qualitySummary: result.data?.quality_summary || currentForm.qualitySummary,
+          groupLeaderConfirmation:
+            result.data?.group_leader_confirmation ||
+            currentForm.groupLeaderConfirmation,
+          qualitySummary:
+            result.data?.quality_summary || currentForm.qualitySummary,
           remarks: result.data?.remarks || currentForm.remarks,
         };
 
@@ -278,33 +292,33 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
           icon: <FaCheckCircle />,
         });
 
-      // Clear the current form
-      setCurrentForm({
-        partscode: "",
-        supplier: "",
-        poNumber: "",
-        deliveryDate: getToday(),
-        inspectionDate: getToday(),
-        deliveryQuantity: "",
-        returnQuantity: "",
-        lotNumber: "",
-        lotQuantity: "",
-        inspector: "",
-        sampleSize: "",
-        defectiveCount: "",
-        judgement: "",
-        strictnessAdjustment: "",
-        selections: {
-          A: false,
-          B: false,
-          C: false,
-          D: false,
-        },
-        destination: "",
-        groupLeaderConfirmation: "",
-        qualitySummary: "",
-        remarks: "",
-      });
+        // Clear the current form
+        setCurrentForm({
+          partscode: "",
+          supplier: "",
+          poNumber: "",
+          deliveryDate: getToday(),
+          inspectionDate: getToday(),
+          deliveryQuantity: "",
+          returnQuantity: "",
+          lotNumber: "",
+          lotQuantity: "",
+          inspector: "",
+          sampleSize: "",
+          defectiveCount: "",
+          judgement: "",
+          strictnessAdjustment: "",
+          selections: {
+            A: false,
+            B: false,
+            C: false,
+            D: false,
+          },
+          destination: "",
+          groupLeaderConfirmation: "",
+          qualitySummary: "",
+          remarks: "",
+        });
       } catch (error: unknown) {
         const errorMessage =
           error instanceof Error ? error.message : "保存失败，请重试";
@@ -350,21 +364,24 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       try {
         // Show loading toast
         const loadingToast = toast.loading("正在删除检查记录...", {
-          icon: "🗑️",
+          icon: <FaSpinner className="animate-spin" />,
         });
 
         // Send DELETE request to API
-        const response = await fetch(`/api/qc/delete?id=${recordToDeleteData.id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `/api/qc/delete?id=${recordToDeleteData.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         // Check if response has content before parsing JSON
         const text = await response.text();
         let result;
-        
+
         try {
           result = text ? JSON.parse(text) : {};
         } catch (parseError) {
@@ -418,7 +435,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       try {
         // Show loading toast
         const loadingToast = toast.loading("正在加载历史记录...", {
-          icon: "📋",
+          icon: <FaSpinner className="animate-spin" />,
         });
 
         // Fetch latest 10 records from API
@@ -432,7 +449,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         // Check if response has content before parsing JSON
         const text = await response.text();
         let result;
-        
+
         try {
           result = text ? JSON.parse(text) : {};
         } catch (parseError) {
@@ -473,33 +490,35 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
           quality_summary?: string | null;
           remarks?: string | null;
         }
-        const historyRecords: FormData[] = (result.data || []).map((record: SupabaseRecord) => ({
-          id: record.id,
-          partscode: record.partscode || "",
-          supplier: record.supplier || "",
-          poNumber: record.po_number || "",
-          deliveryDate: record.delivery_date || "",
-          inspectionDate: record.inspection_date || "",
-          deliveryQuantity: record.delivery_quantity?.toString() || "",
-          returnQuantity: record.return_quantity?.toString() || "",
-          lotNumber: record.lot_number || "",
-          lotQuantity: record.lot_quantity?.toString() || "",
-          inspector: record.inspector || "",
-          sampleSize: record.sample_size?.toString() || "",
-          defectiveCount: record.defective_count?.toString() || "",
-          judgement: record.judgement || "",
-          strictnessAdjustment: record.strictness_adjustment || "",
-          selections: {
-            A: record.selection_a || false,
-            B: record.selection_b || false,
-            C: record.selection_c || false,
-            D: record.selection_d || false,
-          },
-          destination: record.destination || "",
-          groupLeaderConfirmation: record.group_leader_confirmation || "",
-          qualitySummary: record.quality_summary || "",
-          remarks: record.remarks || "",
-        }));
+        const historyRecords: FormData[] = (result.data || []).map(
+          (record: SupabaseRecord) => ({
+            id: record.id,
+            partscode: record.partscode || "",
+            supplier: record.supplier || "",
+            poNumber: record.po_number || "",
+            deliveryDate: record.delivery_date || "",
+            inspectionDate: record.inspection_date || "",
+            deliveryQuantity: record.delivery_quantity?.toString() || "",
+            returnQuantity: record.return_quantity?.toString() || "",
+            lotNumber: record.lot_number || "",
+            lotQuantity: record.lot_quantity?.toString() || "",
+            inspector: record.inspector || "",
+            sampleSize: record.sample_size?.toString() || "",
+            defectiveCount: record.defective_count?.toString() || "",
+            judgement: record.judgement || "",
+            strictnessAdjustment: record.strictness_adjustment || "",
+            selections: {
+              A: record.selection_a || false,
+              B: record.selection_b || false,
+              C: record.selection_c || false,
+              D: record.selection_d || false,
+            },
+            destination: record.destination || "",
+            groupLeaderConfirmation: record.group_leader_confirmation || "",
+            qualitySummary: record.quality_summary || "",
+            remarks: record.remarks || "",
+          })
+        );
 
         // Replace savedRecords with history (or merge if preferred)
         setSavedRecords(historyRecords);
@@ -552,7 +571,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       try {
         // Show loading toast
         const loadingToast = toast.loading("正在更新检查记录...", {
-          icon: "💾",
+          icon: <FaSpinner className="animate-spin" />,
         });
 
         // Send PATCH request to update API
@@ -570,7 +589,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
         // Check if response has content before parsing JSON
         const text = await response.text();
         let result;
-        
+
         try {
           result = text ? JSON.parse(text) : {};
         } catch (parseError) {
@@ -591,17 +610,29 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
           partscode: result.data?.partscode || recordToUpdate.partscode,
           supplier: result.data?.supplier || recordToUpdate.supplier,
           poNumber: result.data?.po_number || recordToUpdate.poNumber,
-          deliveryDate: result.data?.delivery_date || recordToUpdate.deliveryDate,
-          inspectionDate: result.data?.inspection_date || recordToUpdate.inspectionDate,
-          deliveryQuantity: result.data?.delivery_quantity?.toString() || recordToUpdate.deliveryQuantity,
-          returnQuantity: result.data?.return_quantity?.toString() || recordToUpdate.returnQuantity,
+          deliveryDate:
+            result.data?.delivery_date || recordToUpdate.deliveryDate,
+          inspectionDate:
+            result.data?.inspection_date || recordToUpdate.inspectionDate,
+          deliveryQuantity:
+            result.data?.delivery_quantity?.toString() ||
+            recordToUpdate.deliveryQuantity,
+          returnQuantity:
+            result.data?.return_quantity?.toString() ||
+            recordToUpdate.returnQuantity,
           lotNumber: result.data?.lot_number || recordToUpdate.lotNumber,
-          lotQuantity: result.data?.lot_quantity?.toString() || recordToUpdate.lotQuantity,
+          lotQuantity:
+            result.data?.lot_quantity?.toString() || recordToUpdate.lotQuantity,
           inspector: result.data?.inspector || recordToUpdate.inspector,
-          sampleSize: result.data?.sample_size?.toString() || recordToUpdate.sampleSize,
-          defectiveCount: result.data?.defective_count?.toString() || recordToUpdate.defectiveCount,
+          sampleSize:
+            result.data?.sample_size?.toString() || recordToUpdate.sampleSize,
+          defectiveCount:
+            result.data?.defective_count?.toString() ||
+            recordToUpdate.defectiveCount,
           judgement: result.data?.judgement || recordToUpdate.judgement,
-          strictnessAdjustment: result.data?.strictness_adjustment || recordToUpdate.strictnessAdjustment,
+          strictnessAdjustment:
+            result.data?.strictness_adjustment ||
+            recordToUpdate.strictnessAdjustment,
           selections: {
             A: result.data?.selection_a ?? recordToUpdate.selections.A,
             B: result.data?.selection_b ?? recordToUpdate.selections.B,
@@ -609,8 +640,11 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             D: result.data?.selection_d ?? recordToUpdate.selections.D,
           },
           destination: result.data?.destination || recordToUpdate.destination,
-          groupLeaderConfirmation: result.data?.group_leader_confirmation || recordToUpdate.groupLeaderConfirmation,
-          qualitySummary: result.data?.quality_summary || recordToUpdate.qualitySummary,
+          groupLeaderConfirmation:
+            result.data?.group_leader_confirmation ||
+            recordToUpdate.groupLeaderConfirmation,
+          qualitySummary:
+            result.data?.quality_summary || recordToUpdate.qualitySummary,
           remarks: result.data?.remarks || recordToUpdate.remarks,
         };
 
@@ -695,6 +729,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             onChange={(e) => handleInputChange("poNumber", e.target.value)}
             onKeyDown={handleKeyDown}
             tabIndex={1}
+            required
             placeholder="12345"
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -707,6 +742,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             onChange={(e) => handleInputChange("deliveryDate", e.target.value)}
             onKeyDown={handleKeyDown}
             tabIndex={2}
+            required
             type="date"
             max={new Date().toISOString().split("T")[0]}
             className="w-full h-10 text-center border border-black bg-white px-1
@@ -720,6 +756,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             }
             onKeyDown={handleKeyDown}
             tabIndex={3}
+            required
             type="date"
             className="w-full h-10 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -734,6 +771,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             }
             onKeyDown={handleKeyDown}
             tabIndex={4}
+            required
             type="number"
             className="w-full h-10 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -745,6 +783,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             }
             onKeyDown={handleKeyDown}
             tabIndex={5}
+            required
             type="number"
             className="w-full h-10 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -777,6 +816,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             onChange={(e) => handleInputChange("inspector", e.target.value)}
             onKeyDown={handleKeyDown}
             tabIndex={8}
+            required
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
           />
@@ -788,6 +828,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             onChange={(e) => handleInputChange("sampleSize", e.target.value)}
             onKeyDown={handleKeyDown}
             tabIndex={9}
+            required
             type="number"
             className="w-full h-10 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -799,6 +840,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             }
             onKeyDown={handleKeyDown}
             tabIndex={10}
+            required
             type="number"
             className="w-full h-10 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
@@ -811,6 +853,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             onChange={(e) => handleInputChange("judgement", e.target.value)}
             onKeyDown={handleKeyDown}
             tabIndex={11}
+            required
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
           >
@@ -829,6 +872,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             }
             onKeyDown={handleKeyDown}
             tabIndex={12}
+            required
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
           >
@@ -945,7 +989,11 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
               className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-lg">
-                {isLoadingHistory ? <FaSpinner className="animate-spin" /> : <FaHistory />}
+                {isLoadingHistory ? (
+                  <FaSpinner className="animate-spin" />
+                ) : (
+                  <FaHistory />
+                )}
               </span>
               {isLoadingHistory ? "加载中..." : "历史记录"}
             </button>
@@ -975,6 +1023,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
               onChange={(e) => handleInputChange("partscode", e.target.value)}
               onKeyDown={handleKeyDown}
               tabIndex={0}
+              required
             />
           </div>
           <div className="flex pl-2 col-span-2 border text-zinc-600 text-xl">
@@ -990,6 +1039,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
               onChange={(e) => handleInputChange("supplier", e.target.value)}
               onKeyDown={handleKeyDown}
               tabIndex={0}
+              required
             />
           </div>
         </div>
@@ -1079,7 +1129,11 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                     className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     title={isUpdating ? "Saving..." : "Save changes"}
                   >
-                    {isUpdating ? <FaSpinner className="animate-spin" /> : <FaCheck />}
+                    {isUpdating ? (
+                      <FaSpinner className="animate-spin" />
+                    ) : (
+                      <FaCheck />
+                    )}
                   </button>
                   <button
                     onClick={cancelEdit}

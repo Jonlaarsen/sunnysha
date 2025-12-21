@@ -37,3 +37,4 @@ CREATE POLICY "authenticated_delete_own" ON qc_records
 -- Verify policies are created
 SELECT * FROM pg_policies WHERE tablename = 'qc_records';
 
+

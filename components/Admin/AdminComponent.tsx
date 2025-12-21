@@ -9,11 +9,15 @@ import {
 import UserRecordsModal from "./UserRecordsModal";
 import UsersListModal from "./UsersListModal";
 import CreateUserModal from "./CreateUserModal";
+import StatisticsModal from "./StatisticsModal";
 
 const AdminComponent = () => {
   const [showRecordsModal, setShowRecordsModal] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+  const [supplierFilter, setSupplierFilter] = useState<string | undefined>(undefined);
+  const [userFilter, setUserFilter] = useState<string | undefined>(undefined);
 
   const shortcuts = [
     {
@@ -43,13 +47,10 @@ const AdminComponent = () => {
     {
       id: "statistics",
       title: "Statistics & Reports",
-      description: "View system statistics and analytics",
+      description: "View supplier statistics and ratings",
       icon: FaChartBar,
       color: "from-orange-500 to-red-500",
-      onClick: () => {
-        // TODO: Implement statistics page
-        alert("Statistics feature coming soon!");
-      },
+      onClick: () => setShowStatisticsModal(true),
     },
   ];
 
@@ -109,17 +110,38 @@ const AdminComponent = () => {
       {/* Modals */}
       <UserRecordsModal
         isOpen={showRecordsModal}
-        onClose={() => setShowRecordsModal(false)}
+        onClose={() => {
+          setShowRecordsModal(false);
+          setSupplierFilter(undefined);
+          setUserFilter(undefined);
+        }}
+        initialSupplierFilter={supplierFilter}
+        initialUserFilter={userFilter}
       />
       <UsersListModal
         isOpen={showUsersModal}
         onClose={() => setShowUsersModal(false)}
+        onUserClick={(userEmail, userId) => {
+          // Use email for filtering as it's more user-friendly and works with the search
+          setUserFilter(userEmail);
+          setShowUsersModal(false);
+          setShowRecordsModal(true);
+        }}
       />
       <CreateUserModal
         isOpen={showCreateUserModal}
         onClose={() => setShowCreateUserModal(false)}
         onUserCreated={() => {
           // Optionally refresh users list if needed
+        }}
+      />
+      <StatisticsModal
+        isOpen={showStatisticsModal}
+        onClose={() => setShowStatisticsModal(false)}
+        onSupplierClick={(supplierName) => {
+          setSupplierFilter(supplierName);
+          setShowStatisticsModal(false);
+          setShowRecordsModal(true);
         }}
       />
     </div>
