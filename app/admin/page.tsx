@@ -26,24 +26,18 @@ export default function AdminPage() {
         return;
       }
 
-      // Check if user is admin via API
-      try {
-        const response = await fetch("/api/admin/check");
-        const result = await response.json();
+      // Use cached admin status instead of making API call
+      const cachedAdmin = sessionStorage.getItem(`admin_${currentUser.id}`);
+      const isAdminCached = cachedAdmin !== null ? JSON.parse(cachedAdmin) : false;
 
-        if (!result.isAdmin) {
-          toast.error("Access denied. Admin privileges required.");
-          router.push("/");
-          return;
-        }
-
-        setIsAdmin(true);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        toast.error("Error verifying admin access.");
+      if (!isAdminCached) {
+        toast.error("Access denied. Admin privileges required.");
         router.push("/");
+        return;
       }
+
+      setIsAdmin(true);
+      setLoading(false);
     });
 
     // Listen for auth changes

@@ -2,7 +2,10 @@
 import { useState } from "react";
 
 interface LoginFormProps {
-  onSubmit: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSubmit: (
+    email: string,
+    password: string
+  ) => Promise<{ error: string | null }>;
 }
 
 export default function LoginForm({ onSubmit }: LoginFormProps) {
@@ -31,8 +34,8 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-400 via-indigo-500 to-sky-300 px-4">
       <div className="w-full max-w-md bg-white/95 border border-white/40 backdrop-blur shadow-2xl rounded-3xl px-10 py-12 space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 text-2xl font-extrabold shadow-inner">
-            QC
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-indigo-100 text-indigo-600 text-2xl font-extrabold shadow-inner">
+            <img src="./logo_big.png" className="h-auto w-20" alt="" />
           </div>
           <div>
             <p className="text-sm uppercase tracking-[0.4em] text-indigo-400">
@@ -49,9 +52,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">
-              Email
-            </label>
+            <label className="text-sm font-medium text-slate-600">Email</label>
             <input
               className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
               value={email}
@@ -99,5 +100,3 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
     </div>
   );
 }
-
-

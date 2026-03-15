@@ -11,7 +11,14 @@ import { FaSpinner } from "react-icons/fa";
 import type { User } from "@supabase/supabase-js";
 
 export default function Home() {
-  const [currentview, setCurrentview] = useState<"qc" | "qc2">("qc");
+  // Load saved view from localStorage or default to "qc"
+  const [currentview, setCurrentview] = useState<"qc" | "qc2">(() => {
+    if (typeof window !== "undefined") {
+      const savedView = localStorage.getItem("currentView") as "qc" | "qc2" | null;
+      return savedView === "qc" || savedView === "qc2" ? savedView : "qc";
+    }
+    return "qc";
+  });
   const [isViewLoading, setIsViewLoading] = useState(false);
   const { user, isAdmin, checkingAuth, login, logout, isLoggingOut } =
     useAuth();
@@ -20,12 +27,22 @@ export default function Home() {
   const prevViewRef = useRef<"qc" | "qc2">("qc");
   const prevIsAdminRef = useRef(false);
 
-  // Set view for non-admin users only
+  // Save view to localStorage when it changes
   useEffect(() => {
-    if (user && !checkingAuth && !isAdmin) {
-      setCurrentview("qc");
+    if (user && !checkingAuth && !isAdmin && typeof window !== "undefined") {
+      localStorage.setItem("currentView", currentview);
     }
-  }, [isAdmin, user, checkingAuth]);
+  }, [currentview, user, checkingAuth, isAdmin]);
+
+  // Load saved view when user logs in (but don't override if already set)
+  useEffect(() => {
+    if (user && !checkingAuth && !isAdmin && typeof window !== "undefined") {
+      const savedView = localStorage.getItem("currentView") as "qc" | "qc2" | null;
+      if (savedView === "qc" || savedView === "qc2") {
+        setCurrentview(savedView);
+      }
+    }
+  }, [user, checkingAuth, isAdmin]);
 
   // Show loading when logging in (user changes from null to user)
   useEffect(() => {
@@ -65,13 +82,13 @@ export default function Home() {
     }
   }, [isAdmin, user, checkingAuth]);
 
-  // Show loading when changing view
+  // Show loading when changing view (with slight delay to allow fade-out)
   useEffect(() => {
     if (prevViewRef.current !== currentview && user && !checkingAuth) {
-      setIsViewLoading(true);
+      // Keep loading state for smooth transition
       const timer = setTimeout(() => {
         setIsViewLoading(false);
-      }, 500);
+      }, 300); // Reduced from 500ms for faster transition
       prevViewRef.current = currentview;
       return () => clearTimeout(timer);
     }
@@ -80,7 +97,18 @@ export default function Home() {
   // Prevent admins from switching to QC views
   const handleViewChange = (view: "qc" | "qc2" | "admin") => {
     if (isAdmin || view === "admin") return; // Admins can't switch views
-    setCurrentview(view);
+    // Set loading state BEFORE changing view to prevent flash
+    setIsViewLoading(true);
+    // Use requestAnimationFrame to ensure DOM updates before view change
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCurrentview(view);
+        // Save to localStorage immediately
+        if (typeof window !== "undefined") {
+          localStorage.setItem("currentView", view);
+        }
+      });
+    });
   };
 
   if (checkingAuth) {
@@ -102,20 +130,36 @@ export default function Home() {
         isLoggingOut={isLoggingOut}
       />
       <div className="bg-white border-sky-400 border h-full rounded-lg shadow-lg p-6 w-full max-w-6xl mx-auto pb-8 overflow-y-auto">
-        {isViewLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <FaSpinner className="animate-spin text-4xl text-indigo-500 mx-auto mb-4" />
-              <p className="text-gray-600">Loading...</p>
+        <div className="relative min-h-[400px]">
+          {/* Loading overlay */}
+          {isViewLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/90 z-10 transition-opacity duration-200">
+              <div className="text-center">
+                <FaSpinner className="animate-spin text-4xl text-indigo-500 mx-auto mb-4" />
+                <p className="text-gray-600">Loading...</p>
+              </div>
             </div>
+          )}
+          
+          {/* Content with fade transition */}
+          <div
+            key={isAdmin ? "admin" : currentview}
+            className={`transition-opacity duration-300 ease-in-out ${
+              isViewLoading ? "opacity-0" : "opacity-100"
+            }`}
+            style={{
+              visibility: isViewLoading ? "hidden" : "visible",
+            }}
+          >
+            {isAdmin ? (
+              <AdminComponent />
+            ) : currentview === "qc" ? (
+              <QcComponent />
+            ) : (
+              <Qc2Component />
+            )}
           </div>
-        ) : isAdmin ? (
-          <AdminComponent />
-        ) : currentview === "qc" ? (
-          <QcComponent />
-        ) : (
-          <Qc2Component />
-        )}
+        </div>
       </div>
     </div>
   );

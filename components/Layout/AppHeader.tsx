@@ -27,12 +27,16 @@ export default function AppHeader({
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-500 to-indigo-600 rounded-xl blur-sm opacity-50"></div>
-              <div className="relative bg-gradient-to-br from-blue-400 to-purple-700 text-white rounded-xl px-4 py-3 font-extrabold text-2xl shadow-lg">
-                SunnySha
+              <div className="relative flex space-x-2 bg-gradient-to-br from-blue-400 to-purple-200 text-white rounded-xl px-2 py-2 font-extrabold text-2xl shadow-lg">
+                <img
+                  src="./logo_big.png"
+                  className="h-12 w-12"
+                  alt="sunny shanghai logo"
+                />
               </div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-indigo-900 flex items-center gap-2">
                 QC System
               </h1>
               <p className="text-xs text-gray-500 mt-0.5">By jon larsen</p>

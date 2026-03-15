@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 interface PhotoModalProps {
   isOpen: boolean;
@@ -13,7 +13,50 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
   selectedPhoto,
   onClose,
 }) => {
+  const [fileType, setFileType] = useState<"image" | "pdf" | "tif" | "unknown">("unknown");
+  const [displayUrl, setDisplayUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (selectedPhoto) {
+      const url = new URL(selectedPhoto, window.location.origin);
+      const path = url.searchParams.get("path") || selectedPhoto;
+      const ext = path.toLowerCase().split(".").pop() || "";
+      
+      if (ext === "pdf") {
+        setFileType("pdf");
+        setDisplayUrl(selectedPhoto);
+      } else if (ext === "tif" || ext === "tiff") {
+        setFileType("tif");
+        // For TIF files, convert to PNG for display
+        // Extract the path parameter and use conversion endpoint
+        const filePath = url.searchParams.get("path");
+        if (filePath) {
+          const convertUrl = `/api/smb/file-convert?path=${encodeURIComponent(filePath)}&format=png`;
+          setDisplayUrl(convertUrl);
+        } else {
+          setDisplayUrl(selectedPhoto);
+        }
+      } else if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+        setFileType("image");
+        setDisplayUrl(selectedPhoto);
+      } else {
+        setFileType("unknown");
+        setDisplayUrl(selectedPhoto);
+      }
+    }
+  }, [selectedPhoto]);
+
   if (!isOpen) return null;
+
+  const getFileName = () => {
+    try {
+      const url = new URL(selectedPhoto, window.location.origin);
+      const path = url.searchParams.get("path") || "";
+      return path.split("/").pop() || "File";
+    } catch {
+      return selectedPhoto.split("/").pop() || "File";
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -41,15 +84,39 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
         {/* Modal content */}
         <div className="bg-white rounded-xl overflow-hidden shadow-2xl">
           <div className="relative">
-            <img
-              src={selectedPhoto}
-              alt="Product photo - full size"
-              className="w-full h-auto max-h-[80vh] object-contain"
-              onError={(e) => {
-                e.currentTarget.src =
-                  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=";
-              }}
-            />
+            {fileType === "pdf" ? (
+              <iframe
+                src={displayUrl}
+                className="w-full h-[80vh] border-0"
+                title={getFileName()}
+              />
+            ) : fileType === "tif" ? (
+              <img
+                src={displayUrl}
+                alt={getFileName()}
+                className="w-full h-auto max-h-[80vh] object-contain"
+                onError={(e) => {
+                  // Fallback if conversion fails
+                  console.error("Failed to display converted TIF");
+                  e.currentTarget.src =
+                    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRJRiBjb252ZXJzaW9uIGZhaWxlZDwvdGV4dD48L3N2Zz4=";
+                }}
+              />
+            ) : fileType === "image" ? (
+              <img
+                src={displayUrl}
+                alt={getFileName()}
+                className="w-full h-auto max-h-[80vh] object-contain"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBmb3VuZDwvdGV4dD48L3N2Zz4=";
+                }}
+              />
+            ) : (
+              <div className="w-full h-[80vh] flex items-center justify-center bg-gray-100">
+                <p className="text-gray-500">Unsupported file type</p>
+              </div>
+            )}
           </div>
 
           {/* Modal footer */}
@@ -57,15 +124,37 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Product Photo
+                  {getFileName()}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Full resolution view
+                  {fileType === "pdf" ? "PDF Document" : fileType === "tif" ? "TIF File (converted to PNG for display)" : fileType === "image" ? "Image File" : "File Viewer"}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
+                {fileType === "tif" && (
+                  <a
+                    href={selectedPhoto}
+                    download={getFileName()}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center space-x-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    <span>Download Original TIF</span>
+                  </a>
+                )}
                 <button
-                  onClick={() => window.open(selectedPhoto, "_blank")}
+                  onClick={() => window.open(displayUrl, "_blank")}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center space-x-2"
                 >
                   <svg
