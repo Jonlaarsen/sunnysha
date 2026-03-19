@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-// Base path for SMB share
 const SMB_BASE_PATH = process.env.SMB_BASE_PATH || "/Volumes/SUNNYSHA";
 
 export async function GET(req: NextRequest) {
@@ -16,10 +15,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Security: Ensure path is within SMB base
+    // Security: Ensure path is within SMB share (SUNNY_PATH)
     const resolvedPath = path.resolve(filePath);
     const resolvedBase = path.resolve(SMB_BASE_PATH);
-    
     if (!resolvedPath.startsWith(resolvedBase)) {
       return NextResponse.json(
         { error: "Access denied: Path outside SMB share" },

@@ -60,13 +60,13 @@ export default function CreateUserModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch users");
+        throw new Error(result.error || "获取用户列表失败");
       }
 
       setUsers(result.data || []);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to load users";
+        error instanceof Error ? error.message : "加载用户失败";
       toast.error(errorMessage, {
         duration: 3000,
       });
@@ -108,10 +108,10 @@ export default function CreateUserModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || result.message || "Failed to create user");
+        throw new Error(result.error || result.message || "创建用户失败");
       }
 
-      toast.success(result.message || "User created successfully!", {
+      toast.success(result.message || "用户创建成功！", {
         icon: <FaCheck />,
         duration: 5000,
       });
@@ -131,7 +131,7 @@ export default function CreateUserModal({
       }, 1000);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to create user";
+        error instanceof Error ? error.message : "创建用户失败";
       toast.error(errorMessage, {
         icon: <FaTimes />,
         duration: 5000,
@@ -144,7 +144,7 @@ export default function CreateUserModal({
   const handleUpdateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedUserId) {
-      toast.error("Please select a user to update");
+      toast.error("请选择要更新的用户");
       return;
     }
 
@@ -166,10 +166,10 @@ export default function CreateUserModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || result.message || "Failed to update user");
+        throw new Error(result.error || result.message || "更新用户失败");
       }
 
-      toast.success(result.message || "User updated successfully!", {
+      toast.success(result.message || "用户更新成功！", {
         icon: <FaCheck />,
         duration: 5000,
       });
@@ -186,7 +186,7 @@ export default function CreateUserModal({
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to update user";
+        error instanceof Error ? error.message : "更新用户失败";
       toast.error(errorMessage, {
         icon: <FaTimes />,
         duration: 5000,
@@ -199,7 +199,7 @@ export default function CreateUserModal({
   const handleDeleteSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!deleteUserId) {
-      toast.error("Please select a user to delete");
+      toast.error("请选择要删除的用户");
       return;
     }
 
@@ -219,10 +219,10 @@ export default function CreateUserModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || result.message || "Failed to delete user");
+        throw new Error(result.error || result.message || "删除用户失败");
       }
 
-      toast.success(result.message || "User deleted successfully!", {
+      toast.success(result.message || "用户删除成功！", {
         icon: <FaCheck />,
         duration: 5000,
       });
@@ -237,7 +237,7 @@ export default function CreateUserModal({
       }
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete user";
+        error instanceof Error ? error.message : "删除用户失败";
       toast.error(errorMessage, {
         icon: <FaTimes />,
         duration: 5000,
@@ -278,10 +278,10 @@ export default function CreateUserModal({
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
               <FaUserPlus className="text-indigo-600" />
-              User Management
+              用户管理
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Create, update, or delete users
+              创建、更新或删除用户
             </p>
           </div>
           <button
@@ -304,7 +304,7 @@ export default function CreateUserModal({
             }`}
           >
             <FaUserPlus className="inline mr-2" />
-            Create
+            创建
           </button>
           <button
             onClick={() => setActiveTab("update")}
@@ -315,7 +315,7 @@ export default function CreateUserModal({
             }`}
           >
             <FaEdit className="inline mr-2" />
-            Update
+            更新
           </button>
           <button
             onClick={() => setActiveTab("delete")}
@@ -326,7 +326,7 @@ export default function CreateUserModal({
             }`}
           >
             <FaTrash className="inline mr-2" />
-            Delete
+            删除
           </button>
         </div>
 
@@ -337,7 +337,7 @@ export default function CreateUserModal({
             <form onSubmit={handleCreateSubmit} id="create-user-form" className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name (Optional)
+                  姓名（选填）
                 </label>
                 <input
                   type="text"
@@ -351,7 +351,7 @@ export default function CreateUserModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email <span className="text-red-500">*</span>
+                  邮箱 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -369,12 +369,12 @@ export default function CreateUserModal({
                 <div className="flex items-start gap-3">
                   <FaInfoCircle className="text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-blue-800">
-                    <p className="font-semibold mb-2">How it works:</p>
+                    <p className="font-semibold mb-2">说明：</p>
                     <ul className="space-y-1 list-disc list-inside">
-                      <li>User account will be created in Supabase</li>
-                      <li>Account setup link will be sent to the user&apos;s email</li>
-                      <li>User will set their own password using the secure link</li>
-                      <li>Setup links expire in 24 hours for security</li>
+                      <li>将在 Supabase 中创建用户账户</li>
+                      <li>账户设置链接将发送至用户邮箱</li>
+                      <li>用户将通过安全链接自行设置密码</li>
+                      <li>设置链接有效期为 24 小时</li>
                     </ul>
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export default function CreateUserModal({
               {/* Search/Select User */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select User <span className="text-red-500">*</span>
+                  选择用户 <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -396,7 +396,7 @@ export default function CreateUserModal({
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search users..."
+                    placeholder="搜索用户..."
                     className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
@@ -408,7 +408,7 @@ export default function CreateUserModal({
                   <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
                     {filteredUsers.length === 0 ? (
                       <div className="p-4 text-center text-gray-500 text-sm">
-                        {searchTerm ? "No users found" : "Start typing to search users"}
+                        {searchTerm ? "未找到用户" : "输入以搜索用户"}
                       </div>
                     ) : (
                       filteredUsers.map((user) => (
@@ -474,7 +474,7 @@ export default function CreateUserModal({
             <form onSubmit={handleDeleteSubmit} id="delete-user-form" className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select User to Delete <span className="text-red-500">*</span>
+                  选择要删除的用户 <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -482,7 +482,7 @@ export default function CreateUserModal({
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search users..."
+                    placeholder="搜索用户..."
                     className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
@@ -494,7 +494,7 @@ export default function CreateUserModal({
                   <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
                     {filteredUsers.length === 0 ? (
                       <div className="p-4 text-center text-gray-500 text-sm">
-                        {searchTerm ? "No users found" : "Start typing to search users"}
+                        {searchTerm ? "未找到用户" : "输入以搜索用户"}
                       </div>
                     ) : (
                       filteredUsers.map((user) => (
@@ -525,8 +525,8 @@ export default function CreateUserModal({
                   <div className="flex items-start gap-3">
                     <FaInfoCircle className="text-red-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-red-800">
-                      <p className="font-semibold mb-2">Warning: This action cannot be undone!</p>
-                      <p>Deleting this user will permanently remove their account and all associated data.</p>
+                      <p className="font-semibold mb-2">警告：此操作无法撤销！</p>
+                      <p>删除此用户将永久移除其账户及所有关联数据。</p>
                     </div>
                   </div>
                 </div>
@@ -542,7 +542,7 @@ export default function CreateUserModal({
             disabled={creating || updating || deleting}
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            取消
           </button>
           {activeTab === "create" && (
             <button
@@ -554,12 +554,12 @@ export default function CreateUserModal({
               {creating ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  Creating User...
+                  创建中...
                 </>
               ) : (
                 <>
                   <FaUserPlus />
-                  Create User
+                  创建用户
                 </>
               )}
             </button>
@@ -574,12 +574,12 @@ export default function CreateUserModal({
               {updating ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  Updating User...
+                  更新中...
                 </>
               ) : (
                 <>
                   <FaEdit />
-                  Update User
+                  更新用户
                 </>
               )}
             </button>
@@ -594,12 +594,12 @@ export default function CreateUserModal({
               {deleting ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  Deleting User...
+                  删除中...
                 </>
               ) : (
                 <>
                   <FaTrash />
-                  Delete User
+                  删除用户
                 </>
               )}
             </button>

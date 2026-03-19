@@ -2,16 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-// SMB folder path for Excel files
 const SMB_BASE_PATH = process.env.SMB_BASE_PATH || "/Volumes/SUNNYSHA";
-const EXCEL_FOLDER = path.join(
-  SMB_BASE_PATH,
-  "SUNNY",
-  "品管",
-  "日锦升",
-  "标准类",
-  "受入检查数据表"
-);
+const SUNNY_PATH = path.basename(SMB_BASE_PATH) === "SUNNY" ? SMB_BASE_PATH : path.join(SMB_BASE_PATH, "SUNNY");
+const EXCEL_FOLDER = path.join(SUNNY_PATH, "品管", "日锦升", "标准类", "受入检查数据表");
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,17 +13,17 @@ export async function GET(req: NextRequest) {
 
     // Check if SMB base path exists
     try {
-      const baseStats = await fs.stat(SMB_BASE_PATH);
+      const baseStats = await fs.stat(SUNNY_PATH);
       if (!baseStats.isDirectory()) {
         return NextResponse.json(
-          { message: "SMB base path is not accessible" },
+          { message: "SMB 基础路径不可访问" },
           { status: 500 }
         );
       }
     } catch (error) {
       return NextResponse.json(
         { 
-          message: "SMB share not mounted. Please mount the SMB share first.",
+          message: "SMB 共享未挂载，请先挂载 SMB 共享。",
           error: error instanceof Error ? error.message : "Unknown error"
         },
         { status: 503 }
@@ -42,14 +35,14 @@ export async function GET(req: NextRequest) {
       const folderStats = await fs.stat(EXCEL_FOLDER);
       if (!folderStats.isDirectory()) {
         return NextResponse.json(
-          { message: "Excel folder is not accessible" },
+          { message: "Excel 文件夹不可访问" },
           { status: 500 }
         );
       }
     } catch (error) {
       return NextResponse.json(
         { 
-          message: "Excel folder not found or not accessible",
+          message: "Excel 文件夹未找到或不可访问",
           error: error instanceof Error ? error.message : "Unknown error",
           expectedPath: EXCEL_FOLDER
         },
@@ -101,7 +94,7 @@ export async function GET(req: NextRequest) {
     console.error("Failed to list Excel files from SMB", error);
     return NextResponse.json(
       {
-        message: "Unable to list Excel files from SMB share.",
+        message: "无法从 SMB 共享列出 Excel 文件。",
         error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

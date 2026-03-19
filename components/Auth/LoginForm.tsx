@@ -42,17 +42,17 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
               SUNNYSHA
             </p>
             <h1 className="text-3xl font-bold text-slate-900">
-              Secure Sign In
+              安全登录
             </h1>
             <p className="text-sm text-slate-500">
-              Enter your credentials to continue
+              请输入您的凭据以继续
             </p>
           </div>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">Email</label>
+            <label className="text-sm font-medium text-slate-600">邮箱</label>
             <input
               className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
               value={email}
@@ -66,7 +66,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-600">
-              Password
+              密码
             </label>
             <input
               className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
@@ -89,12 +89,12 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
             disabled={loading}
             className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-sky-500 text-white font-semibold tracking-wide shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "登录中..." : "登录"}
           </button>
         </form>
 
         <p className="text-xs text-center text-slate-400">
-          QC Report System • Internal use only
+          质检报告系统 • 仅供内部使用
         </p>
       </div>
     </div>

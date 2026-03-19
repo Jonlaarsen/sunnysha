@@ -13,16 +13,9 @@ type ExcelFile = {
   sheets: SheetData[];
 };
 
-// SMB folder path for Excel files
 const SMB_BASE_PATH = process.env.SMB_BASE_PATH || "/Volumes/SUNNYSHA";
-const EXCEL_FOLDER = path.join(
-  SMB_BASE_PATH,
-  "SUNNY",
-  "品管",
-  "日锦升",
-  "标准类",
-  "受入检查数据表"
-);
+const SUNNY_PATH = path.basename(SMB_BASE_PATH) === "SUNNY" ? SMB_BASE_PATH : path.join(SMB_BASE_PATH, "SUNNY");
+const EXCEL_FOLDER = path.join(SUNNY_PATH, "品管", "日锦升", "标准类", "受入检查数据表");
 
 async function readExcelFile(buffer: ArrayBuffer): Promise<SheetData[]> {
   const workbook = XLSX.read(buffer, { type: "array" });
@@ -44,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     if (!fileName) {
       return NextResponse.json(
-        { message: "File name is required." },
+        { message: "请输入文件名。" },
         { status: 400 }
       );
     }
@@ -52,7 +45,7 @@ export async function GET(req: NextRequest) {
     // Security: Ensure filename doesn't contain path traversal
     if (fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
       return NextResponse.json(
-        { message: "Invalid file name." },
+        { message: "文件名无效。" },
         { status: 400 }
       );
     }
@@ -65,7 +58,7 @@ export async function GET(req: NextRequest) {
     
     if (!resolvedPath.startsWith(resolvedFolder)) {
       return NextResponse.json(
-        { message: "Access denied: Path outside Excel folder" },
+        { message: "访问被拒绝：路径超出 Excel 文件夹范围" },
         { status: 403 }
       );
     }
@@ -75,7 +68,7 @@ export async function GET(req: NextRequest) {
       const stats = await fs.stat(filePath);
       if (stats.isDirectory()) {
         return NextResponse.json(
-          { message: "Path is a directory, not a file" },
+          { message: "路径是目录，不是文件" },
           { status: 400 }
         );
       }
@@ -93,7 +86,7 @@ export async function GET(req: NextRequest) {
       fileBuffer.byteOffset + fileBuffer.byteLength
     );
 
-    const sheets = await readExcelFile(arrayBuffer);
+    const sheets = await readExcelFile(arrayBuffer as ArrayBuffer);
 
     const payload: ExcelFile = {
       fileName,
@@ -105,7 +98,7 @@ export async function GET(req: NextRequest) {
     console.error("Failed to load Excel file from SMB", error);
     return NextResponse.json(
       {
-        message: "Unable to load Excel file from SMB share.",
+        message: "无法从 SMB 共享加载 Excel 文件。",
         error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

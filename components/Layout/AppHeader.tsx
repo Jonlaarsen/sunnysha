@@ -37,9 +37,9 @@ export default function AppHeader({
             </div>
             <div>
               <h1 className="text-2xl font-bold text-indigo-900 flex items-center gap-2">
-                QC System
+                质检系统
               </h1>
-              <p className="text-xs text-gray-500 mt-0.5">By jon larsen</p>
+              <p className="text-xs text-gray-500 mt-0.5">作者：jl-studios</p>
             </div>
           </div>
 
@@ -52,7 +52,7 @@ export default function AppHeader({
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-gray-500 font-medium">
-                  Logged in as
+                  当前登录
                 </span>
                 <span className="text-sm font-semibold text-gray-800">
                   {user.email}
@@ -64,7 +64,7 @@ export default function AppHeader({
             {isAdmin ? (
               <div className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-indigo-500/30">
                 <FaUserShield />
-                <span>Admin Dashboard</span>
+                <span>管理后台</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200">
@@ -76,7 +76,7 @@ export default function AppHeader({
                       : "text-gray-600 hover:text-gray-800 hover:bg-white"
                   }`}
                 >
-                  QC
+                  履历表
                 </button>
                 <button
                   onClick={() => onViewChange("qc2")}
@@ -86,7 +86,7 @@ export default function AppHeader({
                       : "text-gray-600 hover:text-gray-800 hover:bg-white"
                   }`}
                 >
-                  QC2
+                  记录表
                 </button>
               </div>
             )}
@@ -100,12 +100,12 @@ export default function AppHeader({
               {isLoggingOut ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  <span>Logging out...</span>
+                  <span>退出中...</span>
                 </>
               ) : (
                 <>
                   <FaSignOutAlt />
-                  <span>Logout</span>
+                  <span>退出</span>
                 </>
               )}
             </button>

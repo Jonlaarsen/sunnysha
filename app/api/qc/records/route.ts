@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { getAuthenticatedUser } from "@/lib/supabase-server";
+import { isAuthenticatedAdmin } from "@/lib/supabase-server";
 
 // GET endpoint to fetch QC records from Supabase
 // Returns records for the authenticated user, or all records if admin
@@ -8,7 +8,7 @@ import { getAuthenticatedUser } from "@/lib/supabase-server";
 export async function GET(req: NextRequest) {
   try {
     // Require authentication
-    const user = await getAuthenticatedUser();
+    const { user, isAdmin } = await isAuthenticatedAdmin();
     if (!user) {
       return NextResponse.json(
         { 
@@ -18,10 +18,6 @@ export async function GET(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    // Check if user is admin
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
-    const isAdmin = adminEmails.includes(user.email || '');
 
     // Create Supabase client with user session
     const supabase = await createClient();

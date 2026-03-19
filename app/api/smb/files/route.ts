@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-// Base path for SMB share (adjust if needed)
 const SMB_BASE_PATH = process.env.SMB_BASE_PATH || "/Volumes/SUNNYSHA";
-const INSPECTION_FOLDER = path.join(
-  SMB_BASE_PATH,
-  "SUNNY",
-  "品管",
-  "日锦升",
-  "出货检查成绩书"
-);
+const SUNNY_PATH = path.basename(SMB_BASE_PATH) === "SUNNY" ? SMB_BASE_PATH : path.join(SMB_BASE_PATH, "SUNNY");
+const INSPECTION_FOLDER = path.join(SUNNY_PATH, "品管", "日锦升", "出货检查成绩书");
 
 // Helper function to get folder path for a specific year
 function getYearFolder(year?: string | null): string {

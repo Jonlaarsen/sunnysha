@@ -32,11 +32,10 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
             </div>
             <div>
               <h3 className="text-white font-semibold text-lg">
-                Product Photos
+                产品照片
               </h3>
               <p className="text-purple-100 text-sm">
-                {photos.length} {photos.length === 1 ? "photo" : "photos"}{" "}
-                available
+                共 {photos.length} 张照片
               </p>
             </div>
           </div>
@@ -61,7 +60,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
                   d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <span>Clear All</span>
+              <span>全部清除</span>
             </button>
           )}
         </div>
@@ -86,10 +85,10 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
               </svg>
             </div>
             <h4 className="text-lg font-medium text-gray-900 mb-2">
-              No photos available
+              暂无照片
             </h4>
             <p className="text-gray-500">
-              Scan a barcode to fetch product photos
+              扫描条形码获取产品照片
             </p>
           </div>
         ) : (
@@ -100,9 +99,9 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
                 try {
                   const url = new URL(photo, window.location.origin);
                   const path = url.searchParams.get("path") || "";
-                  return path.split("/").pop() || `File ${index + 1}`;
+                  return path.split("/").pop() || `文件 ${index + 1}`;
                 } catch {
-                  return photo.split("/").pop() || `File ${index + 1}`;
+                  return photo.split("/").pop() || `文件 ${index + 1}`;
                 }
               };
 
@@ -128,7 +127,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
                               d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                             />
                           </svg>
-                          <p className="text-xs font-semibold text-red-600">PDF</p>
+                          <p className="text-xs font-semibold text-red-600">PDF 文件</p>
                         </div>
                       </div>
                     ) : (
@@ -168,7 +167,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
                           {getFileName()}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Click to view
+                          点击查看
                         </p>
                       </div>
                       {onPhotoRemove && (
@@ -178,7 +177,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ photos, onPhotoClick, onCle
                             onPhotoRemove(photo);
                           }}
                           className="flex-shrink-0 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                          title="Remove photo"
+                          title="移除照片"
                         >
                           <svg
                             className="w-5 h-5"

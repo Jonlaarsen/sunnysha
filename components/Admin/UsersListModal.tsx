@@ -51,14 +51,14 @@ export default function UsersListModal({
 
       if (!response.ok) {
         throw new Error(
-          result.message || result.error || "Failed to fetch users"
+          result.message || result.error || "获取用户列表失败"
         );
       }
 
       setUsers(result.data || []);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to load users";
+        error instanceof Error ? error.message : "加载用户失败";
       toast.error(errorMessage, {
         duration: 3000,
       });
@@ -68,7 +68,7 @@ export default function UsersListModal({
   };
 
   const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return "Never";
+    if (!dateString) return "从未";
     try {
       const date = new Date(dateString);
       return date.toLocaleString("en-US", {
@@ -101,10 +101,10 @@ export default function UsersListModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">
-              <FaUser className="text-purple-500 text-2xl" /> All Users
+              <FaUser className="text-purple-500 text-2xl" /> 全部用户
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              {users.length} total users
+              共 {users.length} 个用户
             </p>
           </div>
           <button
@@ -119,7 +119,7 @@ export default function UsersListModal({
         <div className="p-4 border-b border-gray-200">
           <input
             type="text"
-            placeholder="Search by email, name, or user ID..."
+            placeholder="按邮箱、姓名或用户 ID 搜索..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -136,8 +136,8 @@ export default function UsersListModal({
             <div className="text-center py-12">
               <p className="text-gray-500">
                 {searchTerm
-                  ? "No users found matching your search."
-                  : "No users found."}
+                  ? "未找到匹配的用户。"
+                  : "暂无用户。"}
               </p>
             </div>
           ) : (
@@ -161,18 +161,18 @@ export default function UsersListModal({
                         </h3>
                         {user.user_metadata?.first_login && (
                           <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                            First Login
+                            首次登录
                           </span>
                         )}
                         {user.email_confirmed_at && (
                           <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                            Verified
+                            已验证
                           </span>
                         )}
                       </div>
                       {onUserClick && (
                         <p className="text-xs text-indigo-600 mb-2 font-medium">
-                          Click to view all records
+                          点击查看全部记录
                         </p>
                       )}
                       <div className="space-y-1 text-sm text-gray-600">
@@ -182,13 +182,13 @@ export default function UsersListModal({
                         </div>
                         <div className="flex items-center gap-2">
                           <FaCalendar className="text-gray-400" />
-                          <span>Created: {formatDate(user.created_at)}</span>
+                          <span>创建时间：{formatDate(user.created_at)}</span>
                         </div>
                         {user.last_sign_in_at && (
                           <div className="flex items-center gap-2">
                             <FaCalendar className="text-gray-400" />
                             <span>
-                              Last Sign In: {formatDate(user.last_sign_in_at)}
+                              上次登录：{formatDate(user.last_sign_in_at)}
                             </span>
                           </div>
                         )}
@@ -207,13 +207,13 @@ export default function UsersListModal({
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {filteredUsers.length} of {users.length} users
+            显示 {filteredUsers.length} / {users.length} 个用户
           </p>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            Close
+            关闭
           </button>
         </div>
       </div>

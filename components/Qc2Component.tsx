@@ -11,22 +11,7 @@ const Qc2Component = () => {
         <div className="border-r flex items-center justify-center h-full w-full">
           <h1 className="text-4xl font-semibold  text-center">受入检查经历</h1>
         </div>
-        <div className="flex flex-col items-center justify-center border-r h-full w-30">
-          <div className="h-6 border-b w-full text-center">
-            <p>blabla</p>
-          </div>
-          <div className="h-14 w-full text-center">
-            <p>blabla</p>
-          </div>
-        </div>
-        <div className="flex flex-col items-center justify-center  h-full w-30">
-          <div className="h-6 border-b w-full text-center">
-            <p>blabla</p>
-          </div>
-          <div className="h-14 w-full text-center">
-            <p>blabla</p>
-          </div>
-        </div>
+       
       </div>
       <ExcelViewer />
     </div>

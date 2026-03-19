@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getAuthenticatedUser } from "@/lib/supabase-server";
+import { isAuthenticatedAdmin } from "@/lib/supabase-server";
 
 export async function DELETE(req: NextRequest) {
   try {
     // Check if current user is admin
-    const currentUser = await getAuthenticatedUser();
+    const { user: currentUser, isAdmin } = await isAuthenticatedAdmin();
     if (!currentUser) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -13,9 +13,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Check if user is admin
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
-    if (!adminEmails.includes(currentUser.email || '')) {
+    if (!isAdmin) {
       return NextResponse.json(
         { error: "Forbidden: Admin access required" },
         { status: 403 }

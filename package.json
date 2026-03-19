@@ -1,12 +1,42 @@
 {
-  "name": "su-wh",
+  "name": "sunny-qc",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron:dev": "concurrently \"next dev --turbopack\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "next build --turbopack && node -e \"const fs=require('fs'); const {execSync}=require('child_process'); if(fs.existsSync('.next/standalone')) { fs.rmSync('standalone', {recursive:true, force:true}); execSync('cp -RL .next/standalone standalone', {stdio:'inherit'}); fs.mkdirSync('standalone/.next', { recursive: true }); if (fs.existsSync('.next/static')) execSync('cp -RL .next/static standalone/.next/static', {stdio:'inherit'}); if (fs.existsSync('public')) execSync('cp -RL public standalone/public', {stdio:'inherit'}); console.log('Copied standalone + static + public'); } else { console.error('Run next build first'); process.exit(1); }\" && electron-builder",
+    "electron:start": "cross-env NODE_ENV=production electron ."
+  },
+  "build": {
+    "appId": "com.su-wh.app",
+    "productName": "SUNNY-QC",
+    "icon": "public/logo_bigger.png",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "standalone/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "standalone/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -28,9 +58,15 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.3.1",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
     "eslint": "^9",
     "eslint-config-next": "^16.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.4"
   }
 }

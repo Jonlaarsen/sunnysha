@@ -22,32 +22,32 @@ const AdminComponent = () => {
   const shortcuts = [
     {
       id: "records",
-      title: "View All Records",
-      description: "Browse QC records from all users",
+      title: "查看全部记录",
+      description: "浏览所有用户的质检记录",
       icon: FaDatabase,
       color: "from-blue-500 to-cyan-500",
       onClick: () => setShowRecordsModal(true),
     },
     {
       id: "users",
-      title: "View All Users",
-      description: "See all registered users and their information",
+      title: "查看全部用户",
+      description: "查看所有注册用户及其信息",
       icon: FaUsers,
       color: "from-purple-500 to-pink-500",
       onClick: () => setShowUsersModal(true),
     },
     {
       id: "create-user",
-      title: "Create/Update Users",
-      description: "Add new users or manage existing ones",
+      title: "创建/更新用户",
+      description: "添加新用户或管理现有用户",
       icon: FaUserPlus,
       color: "from-green-500 to-emerald-500",
       onClick: () => setShowCreateUserModal(true),
     },
     {
       id: "statistics",
-      title: "Statistics & Reports",
-      description: "View supplier statistics and ratings",
+      title: "统计与报表",
+      description: "查看供应商统计和评级",
       icon: FaChartBar,
       color: "from-orange-500 to-red-500",
       onClick: () => setShowStatisticsModal(true),
@@ -58,10 +58,10 @@ const AdminComponent = () => {
     <div className="space-y-6">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Admin Dashboard
+          管理后台
         </h2>
         <p className="text-gray-600">
-          Quick access to system management features
+          快速访问系统管理功能
         </p>
       </div>
 

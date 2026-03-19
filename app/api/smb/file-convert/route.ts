@@ -3,7 +3,6 @@ import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
 
-// Base path for SMB share
 const SMB_BASE_PATH = process.env.SMB_BASE_PATH || "/Volumes/SUNNYSHA";
 
 export async function GET(req: NextRequest) {
@@ -64,7 +63,7 @@ export async function GET(req: NextRequest) {
         .png()
         .toBuffer();
       
-      return new NextResponse(pngBuffer, {
+      return new NextResponse(new Uint8Array(pngBuffer), {
         headers: {
           "Content-Type": "image/png",
           "Content-Disposition": `inline; filename="${path.basename(resolvedPath, ext)}.png"`,

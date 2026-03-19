@@ -45,7 +45,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
             setShowDrawingDropdown(false);
             return;
           }
-          throw new Error("Unable to search drawings.");
+          throw new Error("无法搜索图纸。");
         }
 
         const data = await res.json();
@@ -96,13 +96,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
       onFileSelected(fileUrl);
     }
 
-    toast.success(`Selected: ${file.name}`, { duration: 2000 });
+    toast.success(`已选择：${file.name}`, { duration: 2000 });
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return "0 字节";
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ["字节", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
@@ -127,12 +127,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            Image Search
+            图纸搜索
           </h3>
           <p className="text-sm text-gray-600">
-            Search for drawings (PDF, TIF, JPG) in 图纸 folder
+            在图纸文件夹中搜索 PDF、TIF、JPG 文件
           </p>
         </div>
+      </div>
+
+      <div className="mb-4 px-3 py-2 bg-blue-50/80 rounded-lg border border-blue-100 text-sm text-gray-700">
+        <p className="font-medium text-gray-800 mb-1">使用方法：</p>
+        <ol className="list-decimal list-inside space-y-0.5 text-gray-600">
+          <li>打开 SMB 共享</li>
+          <li>在 SMB 共享中进入 <strong>SUNNY</strong> 文件夹</li>
+          <li>在下方输入部品番号或文件名进行搜索</li>
+        </ol>
       </div>
 
       <div className="relative" ref={searchRef}>
@@ -149,8 +158,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
                 setShowDrawingDropdown(true);
               }
             }}
-            placeholder="Search by part number or filename..."
-            className="w-full px-4 py-2 border focus:bg-white border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="按部品番号或文件名搜索..."
+            className="w-full px-4 py-2 border bg-white/80 focus:bg-white border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {isSearchingDrawings && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -164,8 +173,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
           <div className="absolute z-20 mt-1 w-full max-h-80 overflow-auto rounded-lg border border-gray-200 bg-white shadow-xl">
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
               <p className="text-xs font-semibold text-gray-600">
-                Found {drawingSearchResults.length} file(s) in 图纸 folder
-                (PDF, TIF, JPG):
+                在图纸文件夹中找到 {drawingSearchResults.length} 个文件（PDF、TIF、JPG）：
               </p>
             </div>
             {drawingSearchResults.map((file, index) => (
@@ -220,7 +228,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onFileSelected }) => {
           !isSearchingDrawings &&
           drawingSearchResults.length === 0 && (
             <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-xl">
-              No files found matching &quot;{searchQuery}&quot;
+              未找到与「{searchQuery}」匹配的文件
             </div>
           )}
       </div>

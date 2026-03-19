@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { getAuthenticatedUser } from "@/lib/supabase-server";
+import { isAuthenticatedAdmin } from "@/lib/supabase-server";
 
 interface SupplierStats {
   supplier: string;
@@ -16,7 +16,7 @@ interface SupplierStats {
 export async function GET(req: NextRequest) {
   try {
     // Require authentication
-    const user = await getAuthenticatedUser();
+    const { user, isAdmin } = await isAuthenticatedAdmin();
     if (!user) {
       return NextResponse.json(
         { 
@@ -27,10 +27,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Check if user is admin
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
-    const isAdmin = adminEmails.includes(user.email || '');
-    
     if (!isAdmin) {
       return NextResponse.json(
         { 

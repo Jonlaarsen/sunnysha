@@ -42,9 +42,9 @@ const QcComponent = () => {
   const handleFileSelected = (fileUrl: string) => {
     if (!photos.includes(fileUrl)) {
       setPhotos([...photos, fileUrl]);
-      toast.success("File added to photo gallery", { duration: 2000 });
+      toast.success("文件已添加到照片库", { duration: 2000 });
     } else {
-      toast("File already in gallery", { duration: 2000 });
+      toast("文件已在照片库中", { duration: 2000 });
     }
   };
 
@@ -57,11 +57,11 @@ const QcComponent = () => {
         onPhotoClick={openPhotoModal}
         onClear={() => {
           setPhotos([]);
-          toast.success("All photos cleared", { duration: 2000 });
+          toast.success("已清除全部照片", { duration: 2000 });
         }}
         onPhotoRemove={(photo) => {
           setPhotos(photos.filter((p) => p !== photo));
-          toast.success("Photo removed", { duration: 2000 });
+          toast.success("照片已移除", { duration: 2000 });
         }}
       />
       <PhotoModal

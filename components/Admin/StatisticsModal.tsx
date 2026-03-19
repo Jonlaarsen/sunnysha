@@ -56,7 +56,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
 
       if (!response.ok) {
         throw new Error(
-          result.error || result.message || "Failed to fetch statistics"
+          result.error || result.message || "获取统计失败"
         );
       }
 
@@ -69,7 +69,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to fetch supplier statistics";
+          : "获取供应商统计失败";
       console.error("Error fetching supplier statistics:", error);
       toast.error(errorMessage);
       setSuppliers([]);
@@ -131,7 +131,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
           <div className="flex items-center gap-3">
             <FaChartLine className="text-3xl text-orange-500" />
             <h2 className="text-2xl font-bold">
-              Supplier Statistics & Reports
+              供应商统计与报表
             </h2>
           </div>
           <button
@@ -152,7 +152,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search suppliers..."
+                placeholder="搜索供应商..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
@@ -164,12 +164,12 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
               {isSearching ? (
                 <>
                   <FaSpinner className="animate-spin" />
-                  Searching...
+                  搜索中...
                 </>
               ) : (
                 <>
                   <FaSearch />
-                  Search
+                  搜索
                 </>
               )}
             </button>
@@ -179,7 +179,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                 onClick={handleClearSearch}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
               >
-                Clear
+                清除
               </button>
             )}
           </form>
@@ -195,8 +195,8 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
                 {searchQuery
-                  ? "No suppliers found matching your search."
-                  : "No supplier statistics available."}
+                  ? "未找到匹配的供应商。"
+                  : "暂无供应商统计。"}
               </p>
             </div>
           ) : (
@@ -220,11 +220,11 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                         )}
                       </div>
                       <p className="text-sm text-gray-500">
-                        Latest record: {formatDate(supplier.latestRecordDate)}
+                        最新记录：{formatDate(supplier.latestRecordDate)}
                       </p>
                       {onSupplierClick && (
                         <p className="text-xs text-orange-600 mt-1 font-medium">
-                          Click to view all records
+                          点击查看全部记录
                         </p>
                       )}
                     </div>
@@ -232,7 +232,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                       <div className="text-2xl font-bold text-gray-800">
                         #{index + 1}
                       </div>
-                      <div className="text-xs text-gray-500">Rank</div>
+                      <div className="text-xs text-gray-500">排名</div>
                     </div>
                   </div>
 
@@ -240,7 +240,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                     {/* Total Records */}
                     <div className="bg-blue-50 rounded-lg p-4">
                       <div className="text-sm text-gray-600 mb-1">
-                        Total Records
+                        总记录数
                       </div>
                       <div className="text-2xl font-bold text-blue-600">
                         {supplier.totalRecords}
@@ -254,7 +254,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                       )} rounded-lg p-4`}
                     >
                       <div className="text-sm text-gray-600 mb-1">
-                        Pass Rate
+                        合格率
                       </div>
                       <div
                         className={`text-2xl font-bold ${getPassRateColor(
@@ -267,7 +267,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
 
                     {/* Pass/Fail Count */}
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-2">Results</div>
+                      <div className="text-sm text-gray-600 mb-2">结果</div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
                           <FaCheckCircle className="text-green-500" />
@@ -287,7 +287,7 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
                     {/* Average Defective Count */}
                     <div className="bg-purple-50 rounded-lg p-4">
                       <div className="text-sm text-gray-600 mb-1">
-                        Avg Defects
+                        平均不合格数
                       </div>
                       <div className="text-2xl font-bold text-purple-600">
                         {supplier.averageDefectiveCount.toFixed(2)}
@@ -305,14 +305,14 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
               {searchQuery
-                ? `Showing ${suppliers.length} supplier(s) matching "${searchQuery}"`
-                : `Showing top ${suppliers.length} most recent supplier(s)`}
+                ? `显示 ${suppliers.length} 个匹配「${searchQuery}」的供应商`
+                : `显示最近 ${suppliers.length} 个供应商`}
             </p>
             <button
               onClick={onClose}
               className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
             >
-              Close
+              关闭
             </button>
           </div>
         </div>

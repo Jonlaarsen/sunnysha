@@ -99,13 +99,13 @@ export default function UserRecordsModal({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || result.error || "Failed to fetch records");
+        throw new Error(result.message || result.error || "获取记录失败");
       }
 
       setRecords(result.data || []);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to load records";
+        error instanceof Error ? error.message : "加载记录失败";
       toast.error(errorMessage, {
         duration: 3000,
       });
@@ -146,7 +146,7 @@ export default function UserRecordsModal({
 
   const formatValue = (value: unknown): string => {
     if (value === null || value === undefined) return "-";
-    if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (typeof value === "boolean") return value ? "是" : "否";
     return String(value);
   };
 
@@ -161,7 +161,7 @@ export default function UserRecordsModal({
   };
 
   const getUserEmail = (userId: string): string => {
-    return userMap.get(userId) || "Unknown";
+    return userMap.get(userId) || "未知";
   };
 
   const filteredRecords = records.filter((record) => {
@@ -184,10 +184,10 @@ export default function UserRecordsModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">
-              All QC Records
+              全部质检记录
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              {records.length} total records
+              共 {records.length} 条记录
             </p>
           </div>
           <button
@@ -202,7 +202,7 @@ export default function UserRecordsModal({
         <div className="p-4 border-b border-gray-200">
           <input
             type="text"
-            placeholder="Search by part code, supplier, user email, or user ID..."
+            placeholder="按部品番号、供方、用户邮箱或用户 ID 搜索..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -218,7 +218,7 @@ export default function UserRecordsModal({
           ) : filteredRecords.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
-                {searchTerm ? "No records found matching your search." : "No records found."}
+                {searchTerm ? "未找到匹配的记录。" : "暂无记录。"}
               </p>
             </div>
           ) : (
@@ -249,19 +249,19 @@ export default function UserRecordsModal({
                           </div>
                           <div className="text-sm text-gray-700 flex items-center gap-1">
                             <FaEnvelope className="text-gray-400 text-xs" />
-                            <span className="font-medium">User:</span>{" "}
+                            <span className="font-medium">用户：</span>{" "}
                             {getUserEmail(record.user_id)}
                           </div>
                           <div className="text-sm text-gray-700">
-                            <span className="font-medium">Part Code:</span>{" "}
+                            <span className="font-medium">部品番号：</span>{" "}
                             {formatValue(record.partscode)}
                           </div>
                           <div className="text-sm text-gray-700">
-                            <span className="font-medium">Supplier:</span>{" "}
+                            <span className="font-medium">供方：</span>{" "}
                             {formatValue(record.supplier)}
                           </div>
                           <div className="text-sm text-gray-700">
-                            <span className="font-medium">Created:</span>{" "}
+                            <span className="font-medium">创建时间：</span>{" "}
                             {formatDate(record.created_at)}
                           </div>
                         </div>
@@ -276,33 +276,33 @@ export default function UserRecordsModal({
                           {/* Basic Information */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Basic Information
+                              基本信息
                             </h4>
                             <div className="flex items-center gap-2">
                               <FaEnvelope className="text-gray-400 text-xs" />
                               <div className="flex-1">
-                                <span className="text-gray-600">User Email:</span>{" "}
+                                <span className="text-gray-600">用户邮箱：</span>{" "}
                                 <span className="font-medium text-indigo-600">
                                   {getUserEmail(record.user_id)}
                                 </span>
                               </div>
                             </div>
                             <div>
-                              <span className="text-gray-600">User ID:</span>{" "}
+                              <span className="text-gray-600">用户 ID：</span>{" "}
                               <span className="font-mono text-xs">
                                 {record.user_id}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-600">Part Code:</span>{" "}
+                              <span className="text-gray-600">部品番号：</span>{" "}
                               {formatValue(record.partscode)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Supplier:</span>{" "}
+                              <span className="text-gray-600">供方：</span>{" "}
                               {formatValue(record.supplier)}
                             </div>
                             <div>
-                              <span className="text-gray-600">PO Number:</span>{" "}
+                              <span className="text-gray-600">P/O：</span>{" "}
                               {formatValue(record.po_number)}
                             </div>
                           </div>
@@ -310,22 +310,22 @@ export default function UserRecordsModal({
                           {/* Dates */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Dates
+                              日期
                             </h4>
                             <div>
-                              <span className="text-gray-600">Delivery Date:</span>{" "}
+                              <span className="text-gray-600">纳入日：</span>{" "}
                               {formatDateOnly(record.delivery_date)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Inspection Date:</span>{" "}
+                              <span className="text-gray-600">检完日：</span>{" "}
                               {formatDateOnly(record.inspection_date)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Created At:</span>{" "}
+                              <span className="text-gray-600">创建时间：</span>{" "}
                               {formatDate(record.created_at)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Updated At:</span>{" "}
+                              <span className="text-gray-600">更新时间：</span>{" "}
                               {formatDate(record.updated_at)}
                             </div>
                           </div>
@@ -333,22 +333,22 @@ export default function UserRecordsModal({
                           {/* Quantities */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Quantities
+                              数量
                             </h4>
                             <div>
-                              <span className="text-gray-600">Delivery Qty:</span>{" "}
+                              <span className="text-gray-600">纳入数：</span>{" "}
                               {formatValue(record.delivery_quantity)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Return Qty:</span>{" "}
+                              <span className="text-gray-600">返品数：</span>{" "}
                               {formatValue(record.return_quantity)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Lot Number:</span>{" "}
+                              <span className="text-gray-600">Lot No.：</span>{" "}
                               {formatValue(record.lot_number)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Lot Quantity:</span>{" "}
+                              <span className="text-gray-600">Lot 数量：</span>{" "}
                               {formatValue(record.lot_quantity)}
                             </div>
                           </div>
@@ -356,26 +356,26 @@ export default function UserRecordsModal({
                           {/* Inspection Details */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Inspection Details
+                              检查详情
                             </h4>
                             <div>
-                              <span className="text-gray-600">Inspector:</span>{" "}
+                              <span className="text-gray-600">检查员：</span>{" "}
                               {formatValue(record.inspector)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Sample Size:</span>{" "}
+                              <span className="text-gray-600">抽样数：</span>{" "}
                               {formatValue(record.sample_size)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Defective Count:</span>{" "}
+                              <span className="text-gray-600">不合格数：</span>{" "}
                               {formatValue(record.defective_count)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Judgement:</span>{" "}
+                              <span className="text-gray-600">判定：</span>{" "}
                               {formatValue(record.judgement)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Strictness Adjustment:</span>{" "}
+                              <span className="text-gray-600">严格度调整：</span>{" "}
                               {formatValue(record.strictness_adjustment)}
                             </div>
                           </div>
@@ -383,22 +383,22 @@ export default function UserRecordsModal({
                           {/* Selections */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Selections
+                              选项
                             </h4>
                             <div>
-                              <span className="text-gray-600">Selection A:</span>{" "}
+                              <span className="text-gray-600">选项 A：</span>{" "}
                               {formatValue(record.selection_a)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Selection B:</span>{" "}
+                              <span className="text-gray-600">选项 B：</span>{" "}
                               {formatValue(record.selection_b)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Selection C:</span>{" "}
+                              <span className="text-gray-600">选项 C：</span>{" "}
                               {formatValue(record.selection_c)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Selection D:</span>{" "}
+                              <span className="text-gray-600">选项 D：</span>{" "}
                               {formatValue(record.selection_d)}
                             </div>
                           </div>
@@ -406,14 +406,14 @@ export default function UserRecordsModal({
                           {/* Additional Information */}
                           <div className="space-y-2">
                             <h4 className="font-semibold text-gray-800 mb-2 border-b pb-1">
-                              Additional Information
+                              其他信息
                             </h4>
                             <div>
-                              <span className="text-gray-600">Destination:</span>{" "}
+                              <span className="text-gray-600">出货目的地：</span>{" "}
                               {formatValue(record.destination)}
                             </div>
                             <div>
-                              <span className="text-gray-600">Group Leader Confirmation:</span>{" "}
+                              <span className="text-gray-600">组长确认：</span>{" "}
                               {formatValue(record.group_leader_confirmation)}
                             </div>
                           </div>
@@ -424,7 +424,7 @@ export default function UserRecordsModal({
                               {record.quality_summary && (
                                 <div>
                                   <h4 className="font-semibold text-gray-800 mb-1">
-                                    Quality Summary:
+                                    品质摘要：
                                   </h4>
                                   <p className="text-sm text-gray-700 bg-white p-3 rounded border">
                                     {record.quality_summary}
@@ -434,7 +434,7 @@ export default function UserRecordsModal({
                               {record.remarks && (
                                 <div>
                                   <h4 className="font-semibold text-gray-800 mb-1">
-                                    Remarks:
+                                    备注：
                                   </h4>
                                   <p className="text-sm text-gray-700 bg-white p-3 rounded border">
                                     {record.remarks}
@@ -456,13 +456,13 @@ export default function UserRecordsModal({
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {filteredRecords.length} of {records.length} records
+            显示 {filteredRecords.length} / {records.length} 条记录
           </p>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
-            Close
+            关闭
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/supabase-server";
+import { isAuthenticatedAdmin } from "@/lib/supabase-server";
 
 export async function GET() {
   try {
-    const user = await getAuthenticatedUser();
+    const { user, isAdmin } = await isAuthenticatedAdmin();
     
     if (!user) {
       return NextResponse.json(
@@ -11,10 +11,6 @@ export async function GET() {
         { status: 200 }
       );
     }
-
-    // Check if user is admin
-    const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()) || [];
-    const isAdmin = adminEmails.includes(user.email || "");
 
     return NextResponse.json({
       isAdmin,

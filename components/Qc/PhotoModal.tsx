@@ -114,7 +114,7 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
               />
             ) : (
               <div className="w-full h-[80vh] flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500">Unsupported file type</p>
+                <p className="text-gray-500">不支持的文件类型</p>
               </div>
             )}
           </div>
@@ -127,7 +127,7 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
                   {getFileName()}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {fileType === "pdf" ? "PDF Document" : fileType === "tif" ? "TIF File (converted to PNG for display)" : fileType === "image" ? "Image File" : "File Viewer"}
+                  {fileType === "pdf" ? "PDF 文档" : fileType === "tif" ? "TIF 文件（已转换为 PNG 显示）" : fileType === "image" ? "图片文件" : "文件查看器"}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
@@ -150,7 +150,7 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                       />
                     </svg>
-                    <span>Download Original TIF</span>
+                    <span>下载原始 TIF</span>
                   </a>
                 )}
                 <button
@@ -170,13 +170,13 @@ const PhotoModal: React.FC<PhotoModalProps> = ({
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>
-                  <span>Open in New Tab</span>
+                  <span>在新标签页打开</span>
                 </button>
                 <button
                   onClick={onClose}
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
                 >
-                  Close
+                  关闭
                 </button>
               </div>
             </div>

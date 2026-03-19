@@ -13,7 +13,6 @@ import {
   FaPen,
   FaPlus,
   FaSpinner,
-  FaTrash,
 } from "react-icons/fa";
 import { FaX } from "react-icons/fa6";
 import { IoWarning } from "react-icons/io5";
@@ -55,6 +54,16 @@ export interface FormFieldsTwoRef {
   populateFormWithBarcodeData: (data: FormData) => void;
 }
 
+const getTodayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const isRecordFromToday = (record: FormData): boolean => {
+  const datePart = (record.inspectionDate || "").split("T")[0].split(" ")[0];
+  return datePart === getTodayLocal();
+};
+
 const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
   ({ fetchedData }, ref) => {
     const getToday = () => new Date().toISOString().split("T")[0];
@@ -89,11 +98,8 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
     const [savedRecords, setSavedRecords] = useState<FormData[]>([]);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [originalRecord, setOriginalRecord] = useState<FormData | null>(null);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [recordToDelete, setRecordToDelete] = useState<number | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     useEffect(() => {
@@ -332,98 +338,6 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
       }
     };
 
-    const deleteRecord = (index: number) => {
-      setRecordToDelete(index);
-      setShowDeleteModal(true);
-    };
-
-    const confirmDelete = async () => {
-      if (recordToDelete === null) return;
-
-      // Prevent multiple deletions
-      if (isDeleting) {
-        return;
-      }
-
-      const recordToDeleteData = savedRecords[recordToDelete];
-
-      // If record doesn't have an ID, it was never saved to database, just remove from local state
-      if (!recordToDeleteData.id) {
-        setSavedRecords((prev) => prev.filter((_, i) => i !== recordToDelete));
-        setShowDeleteModal(false);
-        setRecordToDelete(null);
-        toast.success("检查记录已成功删除！", {
-          duration: 3000,
-          icon: <FaTrash />,
-        });
-        return;
-      }
-
-      setIsDeleting(true);
-
-      try {
-        // Show loading toast
-        const loadingToast = toast.loading("正在删除检查记录...", {
-          icon: <FaSpinner className="animate-spin" />,
-        });
-
-        // Send DELETE request to API
-        const response = await fetch(
-          `/api/qc/delete?id=${recordToDeleteData.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        // Check if response has content before parsing JSON
-        const text = await response.text();
-        let result;
-
-        try {
-          result = text ? JSON.parse(text) : {};
-        } catch (parseError) {
-          console.error("Failed to parse response:", parseError);
-          throw new Error("服务器响应格式错误，请重试");
-        }
-
-        if (!response.ok) {
-          throw new Error(result.message || result.error || "删除失败");
-        }
-
-        // Dismiss loading toast
-        toast.dismiss(loadingToast);
-
-        // Remove from local state only after successful API deletion
-        setSavedRecords((prev) => prev.filter((_, i) => i !== recordToDelete));
-        setShowDeleteModal(false);
-        setRecordToDelete(null);
-
-        // Show success toast
-        toast.success(result.message || "检查记录已成功删除！", {
-          duration: 3000,
-          icon: <FaTrash />,
-        });
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : "删除失败，请重试";
-        toast.error(errorMessage, {
-          duration: 3000,
-          icon: <IoWarning />,
-        });
-        console.error("Error deleting record:", error);
-      } finally {
-        setIsDeleting(false);
-      }
-    };
-
-    const cancelDelete = () => {
-      setShowDeleteModal(false);
-      setRecordToDelete(null);
-    };
-
     const loadHistory = async () => {
       // Prevent multiple requests
       if (isLoadingHistory) {
@@ -543,6 +457,13 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
 
     const editRecord = (index: number) => {
       const recordToEdit = savedRecords[index];
+      if (!isRecordFromToday(recordToEdit)) {
+        toast.error("只能编辑当天的检查记录", {
+          duration: 3000,
+          icon: <IoWarning />,
+        });
+        return;
+      }
       setOriginalRecord({ ...recordToEdit }); // Store original data
       setEditingIndex(index);
     };
@@ -857,7 +778,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
           >
-            <option value="">Select an option</option>
+            <option value="">请选择</option>
             <option value="合格">合格</option>
             <option value="不合格">不合格</option>
             <option value="条件合格">条件合格</option>
@@ -876,7 +797,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
             className="w-full h-20 text-center border border-black bg-white px-1
             focus:ring-2 focus:ring-sky-600 focus:ring-offset-0 rounded-none"
           >
-            <option value="">Select an option</option>
+            <option value="">请选择</option>
             <option value="正常">正常</option>
             <option value="加严">加严</option>
             <option value="放宽">放宽</option>
@@ -1127,7 +1048,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                     onClick={saveEdit}
                     disabled={isUpdating}
                     className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={isUpdating ? "Saving..." : "Save changes"}
+                    title={isUpdating ? "保存中..." : "保存修改"}
                   >
                     {isUpdating ? (
                       <FaSpinner className="animate-spin" />
@@ -1138,27 +1059,29 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                   <button
                     onClick={cancelEdit}
                     className="bg-gray-500 hover:bg-gray-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200"
-                    title="Cancel edit"
+                    title="取消编辑"
                   >
                     <FaX />
                   </button>
                 </>
               ) : (
                 <>
-                  <button
-                    onClick={() => editRecord(index)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200"
-                    title="Edit record"
-                  >
-                    <FaPen />
-                  </button>
-                  <button
-                    onClick={() => deleteRecord(index)}
-                    className="bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200"
-                    title="Delete record"
-                  >
-                    <FaX />
-                  </button>
+                  {isRecordFromToday(record) ? (
+                    <button
+                      onClick={() => editRecord(index)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors duration-200"
+                      title="编辑记录"
+                    >
+                      <FaPen />
+                    </button>
+                  ) : (
+                    <span
+                      className="text-gray-400 bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs cursor-not-allowed"
+                      title="只能编辑当天的检查记录"
+                    >
+                      <FaPen />
+                    </span>
+                  )}
                 </>
               )}
             </div>
@@ -1458,7 +1381,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                       }}
                       className="w-full h-full text-center border-none bg-transparent px-1 focus:ring-2 focus:ring-sky-600 focus:ring-offset-0"
                     >
-                      <option value="">Select an option</option>
+                      <option value="">请选择</option>
                       <option value="合格">合格</option>
                       <option value="不合格">不合格</option>
                       <option value="条件合格">条件合格</option>
@@ -1485,7 +1408,7 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
                       }}
                       className="w-full h-full text-center border-none bg-transparent px-1 focus:ring-2 focus:ring-sky-600 focus:ring-offset-0"
                     >
-                      <option value="">Select an option</option>
+                      <option value="">请选择</option>
                       <option value="正常">正常</option>
                       <option value="加严">加严</option>
                       <option value="放宽">放宽</option>
@@ -1733,47 +1656,6 @@ const FormFieldsTwo = forwardRef<FormFieldsTwoRef, FormFieldsTwoProps>(
 
         {/* Add new section button */}
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                  <IoWarning className="h-7 w-7 text-red-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  确认删除
-                </h3>
-              </div>
-              <p className="text-gray-600 mb-6">
-                您确定要删除这条检查记录吗？此操作无法撤销。
-              </p>
-              <div className="flex space-x-3 justify-end">
-                <button
-                  onClick={cancelDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isDeleting ? (
-                    <>
-                      <FaSpinner className="animate-spin" />
-                      删除中...
-                    </>
-                  ) : (
-                    "删除"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

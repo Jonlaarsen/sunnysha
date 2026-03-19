@@ -67,11 +67,31 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Only allow editing today's reports (inspection_date must be today)
+    const supabase = await createClient();
+    const { data: existing } = await supabase
+      .from("qc_records")
+      .select("inspection_date")
+      .eq("id", body.id)
+      .single();
+
+    if (existing?.inspection_date) {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const recordDate = String(existing.inspection_date).split("T")[0].split(" ")[0];
+      if (recordDate !== today) {
+        return NextResponse.json(
+          {
+            error: "Forbidden",
+            message: "只能编辑当天的检查记录",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Use authenticated user's ID
     const userId = user.id;
-
-    // Create Supabase client with user session
-    const supabase = await createClient();
 
     // Prepare data for Supabase update
     const recordData = {

@@ -1,39 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SU-WH
 
-## Getting Started
+A Next.js + Electron desktop application for QC workflows.
 
-First, run the development server:
+## Development
+
+### Web (Next.js only)
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Electron (desktop app)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run electron:dev
+```
 
-## Learn More
+Runs Next.js dev server and opens the app in an Electron window. Environment variables from `.env.local` are loaded automatically.
 
-To learn more about Next.js, take a look at the following resources:
+## Building for Production
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Electron desktop app
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run electron:build
+```
 
-## Deploy on Vercel
+Creates installers in `dist/`:
+- **macOS**: `.dmg` and `.zip`
+- **Windows**: `.exe` (NSIS) and portable
+- **Linux**: `.AppImage`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Your `.env.local` file is loaded in both development and production.
 
+### SMB share path
 
-& "Z:\Users\jonlarsen\Desktop\test-connection\test-windows-connection.ps1"
+If you connect to `smb://192.168.1.120/SUNNYSHA/SUNNY`, the share mounts at `/Volumes/SUNNY`. Add to `.env.local`:
+
+```
+SMB_BASE_PATH=/Volumes/SUNNY
+```
+
+If you connect to `smb://192.168.1.120/SUNNYSHA` (mounts at `/Volumes/SUNNYSHA`), no change needed.
+
+### Production build
+
+For the packaged Electron app, env vars are loaded from (in order):
+
+1. `.env.local` or `.env` in the app resources
+2. `.env.local` or `.env` next to the `.app` bundle (macOS) or executable
+3. Current working directory
+
+**To include env in the packaged app** (optional, for distribution):
+
+1. Create `.env.local` in the project root before running `npm run electron:build`
+2. Add to `package.json` under `build.extraFiles`:
+   ```json
+   "extraFiles": [
+     { "source": ".env.local", "destination": "." }
+   ]
+   ```
+
+**Security note**: Avoid bundling secrets in the app. Prefer placing `.env.local` next to the installed app for production deployments.
+
+## Project Structure
+
+- `app/` – Next.js App Router pages and API routes
+- `components/` – React components
+- `electron/main.js` – Electron main process
+- `lib/` – Supabase, SQL Server config

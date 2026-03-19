@@ -56,8 +56,8 @@ export default function ExcelDisplay() {
       const res = await fetch(url);
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Unable to load Excel file." }));
-        throw new Error(errorData.message || "Unable to load Excel file.");
+        const errorData = await res.json().catch(() => ({ message: "无法加载 Excel 文件。" }));
+        throw new Error(errorData.message || "无法加载 Excel 文件。");
       }
 
       const data: ExcelFile = await res.json();
@@ -187,8 +187,8 @@ export default function ExcelDisplay() {
         const res = await fetch(url);
 
         if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: "Unable to search files." }));
-          throw new Error(errorData.message || "Unable to search files.");
+        const errorData = await res.json().catch(() => ({ message: "无法搜索文件。" }));
+        throw new Error(errorData.message || "无法搜索文件。");
         }
 
         const data: string[] = await res.json();
@@ -216,7 +216,7 @@ export default function ExcelDisplay() {
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="Search Excel files from SMB share (标准类/受入检查数据表)..."
+              placeholder="搜索 SMB 共享中的 Excel 文件（标准类/受入检查数据表）..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -231,7 +231,7 @@ export default function ExcelDisplay() {
             />
             {isLoading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                Searching...
+                搜索中...
               </div>
             )}
           </div>
@@ -254,7 +254,7 @@ export default function ExcelDisplay() {
               }}
               className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50 focus:outline-none focus:ring-1 focus:ring-zinc-500"
             >
-              Clear
+              清除
             </button>
           )}
         </div>
@@ -276,7 +276,7 @@ export default function ExcelDisplay() {
 
         {showDropdown && searchQuery && !isLoading && searchResults.length === 0 && (
           <div className="absolute z-10 mt-1 w-full rounded border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-500 shadow-lg">
-            No files found matching "{searchQuery}"
+            未找到与「{searchQuery}」匹配的文件
           </div>
         )}
       </div>
@@ -288,7 +288,7 @@ export default function ExcelDisplay() {
       )}
 
       {isLoadingFile && (
-        <p className="px-4 text-sm text-zinc-500">Loading Excel file…</p>
+        <p className="px-4 text-sm text-zinc-500">正在加载 Excel 文件…</p>
       )}
 
       {selectedFile && !isLoadingFile && (
@@ -303,12 +303,12 @@ export default function ExcelDisplay() {
               return (
                 <div key={sheet.sheetName} className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-zinc-600">
-                    Sheet: {sheet.sheetName}
+                    工作表：{sheet.sheetName}
                   </p>
 
                   {sheet.rows.length === 0 ? (
                     <p className="text-xs text-zinc-400">
-                      No data in this sheet.
+                      此工作表无数据。
                     </p>
                   ) : (
                     <div className="overflow-x-auto">
@@ -348,7 +348,7 @@ export default function ExcelDisplay() {
                                         onChange={(e) =>
                                           updateCellValue(sheet.sheetName, rowIndex, header, e.target.value)
                                         }
-                                        className="w-full min-w-[80px] text-red-500 rounded px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                        className="w-full min-w-[80px] text-blue-600 rounded px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                                         placeholder=""
                                       />
                                     ) : (
@@ -372,12 +372,12 @@ export default function ExcelDisplay() {
 
       {!selectedFile && !isLoadingFile && !error && !searchQuery && (
         <div className="px-4 text-sm text-zinc-500">
-          <p className="mb-2">Search for Excel files from SMB share:</p>
+          <p className="mb-2">从 SMB 共享搜索 Excel 文件：</p>
           <p className="text-xs text-zinc-400">
-            Location: SUNNY/品管/日锦升/标准类/受入检查数据表
+            路径：SUNNY/品管/日锦升/标准类/受入检查数据表
           </p>
           <p className="mt-2 text-xs text-zinc-400">
-            Example searches: "4038219303", "基准书", or any part of the filename
+            搜索示例：「4038219303」、「基准书」或文件名任意部分
           </p>
         </div>
       )}

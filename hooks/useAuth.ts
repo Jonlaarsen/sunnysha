@@ -8,6 +8,8 @@ interface UseAuthReturn {
   user: User | null;
   isAdmin: boolean;
   checkingAuth: boolean;
+  adminStatusResolved: boolean;
+  skipAuthCheck: () => void;
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
   isLoggingOut: boolean;
@@ -17,10 +19,12 @@ export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [adminStatusResolved, setAdminStatusResolved] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const hasCheckedAdminRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   const checkAdminStatus = async (user: User, forceCheck: boolean = false): Promise<void> => {
     // Only check if forced (explicit login) or if we haven't checked yet and no cache exists
@@ -29,6 +33,7 @@ export function useAuth(): UseAuthReturn {
     if (!forceCheck && cachedAdmin !== null) {
       // Use cached value, don't make API call
       setIsAdmin(JSON.parse(cachedAdmin));
+      setAdminStatusResolved(true);
       return;
     }
 
@@ -36,90 +41,127 @@ export function useAuth(): UseAuthReturn {
       // Already checked in this session, use cache
       if (cachedAdmin !== null) {
         setIsAdmin(JSON.parse(cachedAdmin));
+        setAdminStatusResolved(true);
       }
       return;
     }
 
     try {
-      const response = await fetch("/api/admin/check");
-      const result = await response.json();
-      const adminStatus = result.isAdmin || false;
+      // On explicit login, auth cookies/session can lag briefly.
+      // Retry a few times before deciding user is not admin.
+      const maxAttempts = forceCheck ? 4 : 1;
+      let result: { isAdmin?: boolean; authenticated?: boolean } = {};
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const response = await fetch("/api/admin/check", { cache: "no-store" });
+        result = await response.json();
+        if (result.authenticated) break;
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 250));
+        }
+      }
+
+      const adminStatus = !!result.isAdmin;
       setIsAdmin(adminStatus);
-      // Cache admin status in sessionStorage
-      sessionStorage.setItem(`admin_${user.id}`, JSON.stringify(adminStatus));
-      hasCheckedAdminRef.current = true;
+      setAdminStatusResolved(true);
+
+      // Cache only after authenticated check succeeds to avoid persisting false
+      // from transient login timing races.
+      if (result.authenticated) {
+        sessionStorage.setItem(`admin_${user.id}`, JSON.stringify(adminStatus));
+        hasCheckedAdminRef.current = true;
+      }
     } catch (error) {
       setIsAdmin(false);
+      setAdminStatusResolved(true);
       sessionStorage.removeItem(`admin_${user.id}`);
     }
   };
 
   useEffect(() => {
+    let cancelled = false;
+
+    // Timeout: if auth check hangs (e.g. Supabase unreachable), show login after 5s
+    const timeoutId = setTimeout(() => {
+      if (cancelled) return;
+      setCheckingAuth(false);
+      setAdminStatusResolved(true);
+    }, 5000);
+
     // Check if user is already logged in
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (cancelled) return;
+      clearTimeout(timeoutId);
       if (user) {
-        // Check if session marker exists (indicates user logged in during this browser session)
-        // If marker is missing, it means the browser/tab was closed and reopened
-        const sessionMarker = sessionStorage.getItem('auth_session_active');
-        
-        if (!sessionMarker) {
-          // No session marker = new browser session after close
-          // Sign out to require fresh login
-          supabase.auth.signOut().catch(() => {
-            // Ignore errors - just ensure state is cleared
-          });
-          setUser(null);
-          setIsAdmin(false);
-          setCheckingAuth(false);
-          return;
-        }
-        
-        // Session marker exists - user is logged in for this session
         setUser(user);
-        // Try to get cached admin status
+        currentUserIdRef.current = user.id;
+        // Try cache first; fetch from API when cache is missing.
         const cachedAdmin = sessionStorage.getItem(`admin_${user.id}`);
         if (cachedAdmin !== null) {
           setIsAdmin(JSON.parse(cachedAdmin));
+          setAdminStatusResolved(true);
         } else {
-          setIsAdmin(false);
+          await checkAdminStatus(user, false);
         }
         setCheckingAuth(false);
       } else {
+        setAdminStatusResolved(true);
         setCheckingAuth(false);
       }
+    }).catch(() => {
+      if (cancelled) return;
+      clearTimeout(timeoutId);
+      setAdminStatusResolved(true);
+      setCheckingAuth(false);
     });
 
-    // Listen for auth changes - do NOT check admin status here
+    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
-        // Use cached admin status for all auth state changes
-        const cachedAdmin = sessionStorage.getItem(`admin_${session.user.id}`);
-        if (cachedAdmin !== null) {
-          setIsAdmin(JSON.parse(cachedAdmin));
+        const didUserChange = currentUserIdRef.current !== session.user.id;
+        currentUserIdRef.current = session.user.id;
+
+        // Re-check admin only on real sign-in/user switch.
+        if (event === "SIGNED_IN" && didUserChange) {
+          setAdminStatusResolved(false);
+          await checkAdminStatus(session.user, true);
         } else {
-          setIsAdmin(false);
+          // For token refresh/window focus events, avoid network checks.
+          const cachedAdmin = sessionStorage.getItem(`admin_${session.user.id}`);
+          if (cachedAdmin !== null) {
+            setIsAdmin(JSON.parse(cachedAdmin));
+            setAdminStatusResolved(true);
+          } else {
+            setAdminStatusResolved(true);
+          }
         }
         setIsLoggingOut(false);
       } else {
         setUser(null);
+        currentUserIdRef.current = null;
         setIsAdmin(false);
+        setAdminStatusResolved(true);
         setIsLoggingOut(false);
         hasCheckedAdminRef.current = false;
-        // Clear session data on logout
+        // Clear role cache on logout
         if (typeof window !== 'undefined') {
-          if (session?.user?.id) {
-            sessionStorage.removeItem(`admin_${session.user.id}`);
-          }
-          sessionStorage.removeItem('auth_session_active');
+          sessionStorage.removeItem('currentView');
+          Object.keys(sessionStorage)
+            .filter((k) => k.startsWith('admin_'))
+            .forEach((k) => sessionStorage.removeItem(k));
         }
       }
       setCheckingAuth(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (
@@ -136,14 +178,6 @@ export function useAuth(): UseAuthReturn {
     }
 
     if (data.user) {
-      setUser(data.user);
-      // Set session marker - this indicates user logged in during this browser session
-      // If this marker is missing on next page load, user will be signed out
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('auth_session_active', 'true');
-      }
-      // Check admin status when explicitly logging in
-      await checkAdminStatus(data.user, true);
       router.refresh();
       return { error: null };
     }
@@ -162,6 +196,7 @@ export function useAuth(): UseAuthReturn {
       await supabase.auth.signOut();
       setUser(null);
       setIsAdmin(false);
+      setAdminStatusResolved(true);
       hasCheckedAdminRef.current = false; // Reset ref on logout
       
       // Clear all session storage on logout
@@ -177,10 +212,14 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
+  const skipAuthCheck = () => setCheckingAuth(false);
+
   return {
     user,
     isAdmin,
     checkingAuth,
+    adminStatusResolved,
+    skipAuthCheck,
     login,
     logout,
     isLoggingOut,

@@ -8,7 +8,6 @@ import QcComponent from "@/components/QcComponent";
 import Qc2Component from "@/components/Qc2Component";
 import AdminComponent from "@/components/Admin/AdminComponent";
 import { FaSpinner } from "react-icons/fa";
-import type { User } from "@supabase/supabase-js";
 
 export default function Home() {
   // Load saved view from localStorage or default to "qc"
@@ -20,12 +19,18 @@ export default function Home() {
     return "qc";
   });
   const [isViewLoading, setIsViewLoading] = useState(false);
-  const { user, isAdmin, checkingAuth, login, logout, isLoggingOut } =
+  const {
+    user,
+    isAdmin,
+    checkingAuth,
+    adminStatusResolved,
+    skipAuthCheck,
+    login,
+    logout,
+    isLoggingOut,
+  } =
     useAuth();
-  const prevUserRef = useRef<User | null>(null);
-  const prevCheckingAuthRef = useRef(true);
   const prevViewRef = useRef<"qc" | "qc2">("qc");
-  const prevIsAdminRef = useRef(false);
 
   // Save view to localStorage when it changes
   useEffect(() => {
@@ -44,44 +49,6 @@ export default function Home() {
     }
   }, [user, checkingAuth, isAdmin]);
 
-  // Show loading when logging in (user changes from null to user)
-  useEffect(() => {
-    if (prevUserRef.current === null && user !== null && !checkingAuth) {
-      setIsViewLoading(true);
-      const timer = setTimeout(() => {
-        setIsViewLoading(false);
-      }, 500);
-      prevUserRef.current = user;
-      return () => clearTimeout(timer);
-    }
-    prevUserRef.current = user;
-  }, [user, checkingAuth]);
-
-  // Show loading when refreshing (checkingAuth changes from true to false)
-  useEffect(() => {
-    if (prevCheckingAuthRef.current === true && checkingAuth === false && user) {
-      setIsViewLoading(true);
-      const timer = setTimeout(() => {
-        setIsViewLoading(false);
-      }, 500);
-      prevCheckingAuthRef.current = checkingAuth;
-      return () => clearTimeout(timer);
-    }
-    prevCheckingAuthRef.current = checkingAuth;
-  }, [checkingAuth, user]);
-
-  // Show loading when admin status changes
-  useEffect(() => {
-    if (prevIsAdminRef.current !== isAdmin && user && !checkingAuth) {
-      setIsViewLoading(true);
-      const timer = setTimeout(() => {
-        setIsViewLoading(false);
-      }, 500);
-      prevIsAdminRef.current = isAdmin;
-      return () => clearTimeout(timer);
-    }
-  }, [isAdmin, user, checkingAuth]);
-
   // Show loading when changing view (with slight delay to allow fade-out)
   useEffect(() => {
     if (prevViewRef.current !== currentview && user && !checkingAuth) {
@@ -93,6 +60,15 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [currentview, user, checkingAuth]);
+
+  // Hard fallback: never let overlay loading stay forever.
+  useEffect(() => {
+    if (!isViewLoading) return;
+    const timeout = setTimeout(() => {
+      setIsViewLoading(false);
+    }, 4000);
+    return () => clearTimeout(timeout);
+  }, [isViewLoading]);
 
   // Prevent admins from switching to QC views
   const handleViewChange = (view: "qc" | "qc2" | "admin") => {
@@ -111,8 +87,8 @@ export default function Home() {
     });
   };
 
-  if (checkingAuth) {
-    return <LoadingSpinner />;
+  if (checkingAuth || (user && !adminStatusResolved)) {
+    return <LoadingSpinner onSkip={skipAuthCheck} />;
   }
 
   if (!user) {
@@ -135,8 +111,18 @@ export default function Home() {
           {isViewLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/90 z-10 transition-opacity duration-200">
               <div className="text-center">
-                <FaSpinner className="animate-spin text-4xl text-indigo-500 mx-auto mb-4" />
-                <p className="text-gray-600">Loading...</p>
+                <FaSpinner
+                  className="text-4xl text-indigo-500 mx-auto mb-4"
+                  style={{ animation: "spin 1s linear infinite" }}
+                />
+                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                <p className="text-gray-600">加载中...</p>
+                <button
+                  onClick={() => setIsViewLoading(false)}
+                  className="mt-3 px-4 py-1.5 text-sm rounded border border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                >
+                  继续
+                </button>
               </div>
             </div>
           )}
