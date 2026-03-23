@@ -9,7 +9,10 @@
     "start": "next start",
     "lint": "eslint",
     "electron:dev": "concurrently \"next dev --turbopack\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "next build --turbopack && node -e \"const fs=require('fs'); const {execSync}=require('child_process'); if(fs.existsSync('.next/standalone')) { fs.rmSync('standalone', {recursive:true, force:true}); execSync('cp -RL .next/standalone standalone', {stdio:'inherit'}); fs.mkdirSync('standalone/.next', { recursive: true }); if (fs.existsSync('.next/static')) execSync('cp -RL .next/static standalone/.next/static', {stdio:'inherit'}); if (fs.existsSync('public')) execSync('cp -RL public standalone/public', {stdio:'inherit'}); console.log('Copied standalone + static + public'); } else { console.error('Run next build first'); process.exit(1); }\" && electron-builder",
+    "electron:build": "next build --turbopack && node -e \"const fs=require('fs'); const {execSync}=require('child_process'); if(!process.env.SKIP_DIST_CLEAN&&fs.existsSync('dist')) fs.rmSync('dist', {recursive:true, force:true}); if(fs.existsSync('.next/standalone')) { fs.rmSync('standalone', {recursive:true, force:true}); execSync('cp -RL .next/standalone standalone', {stdio:'inherit'}); fs.mkdirSync('standalone/.next', { recursive: true }); if (fs.existsSync('.next/static')) execSync('cp -RL .next/static standalone/.next/static', {stdio:'inherit'}); if (fs.existsSync('public')) execSync('cp -RL public standalone/public', {stdio:'inherit'}); if (fs.existsSync('standalone/dist')) fs.rmSync('standalone/dist', {recursive:true, force:true}); if (fs.existsSync('.env.local')) { fs.copyFileSync('.env.local', 'standalone/.env.local'); console.log('Copied .env.local into standalone'); } else { console.warn('Warning: .env.local not found - packaged app will not have SUPABASE_SERVICE_ROLE_KEY etc.'); } console.log('Copied standalone + static + public'); } else { console.error('Run next build first'); process.exit(1); }\" && electron-builder --publish never",
+    "electron:build:mac": "cross-env SKIP_DIST_CLEAN=1 npm run electron:build -- --mac",
+    "electron:build:win": "npm run electron:build -- --win",
+    "electron:build:win64": "npm run electron:build -- --win --x64",
     "electron:start": "cross-env NODE_ENV=production electron ."
   },
   "build": {
@@ -21,7 +24,8 @@
     },
     "files": [
       "electron/**/*",
-      "standalone/**/*"
+      "standalone/**/*",
+      "!standalone/dist/**"
     ],
     "asar": true,
     "asarUnpack": [

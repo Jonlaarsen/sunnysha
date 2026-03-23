@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
+import { LOGIN_TIMESTAMP_KEY } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FaLock, FaCheck, FaTimes, FaSpinner, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -90,6 +91,11 @@ export default function SetupPasswordPage() {
 
       if (sessionError) {
         throw sessionError;
+      }
+
+      // Start 12-hour session timer
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
       }
 
       // Update password

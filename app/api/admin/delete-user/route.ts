@@ -20,6 +20,16 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    const admin = supabaseAdmin;
+    if (!admin) {
+      return NextResponse.json(
+        {
+          error: "请在 .env.local 中设置 SUPABASE_SERVICE_ROLE_KEY（Supabase 面板 → Settings → API → service_role key）",
+        },
+        { status: 503 }
+      );
+    }
+
     // Get user ID from query parameter or request body
     const userId = req.nextUrl.searchParams.get("userId");
     const body = await req.json().catch(() => ({}));
@@ -41,7 +51,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete user using admin client
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+    const { error } = await admin.auth.admin.deleteUser(targetUserId);
 
     if (error) {
       console.error("Error deleting user:", error);

@@ -36,6 +36,8 @@ function loadEnvVars() {
       path.join(appPath, "..", ".env"),
       path.join(resourcesPath, ".env.local"),
       path.join(resourcesPath, ".env"),
+      path.join(resourcesPath, "app.asar.unpacked", "standalone", ".env.local"),
+      path.join(resourcesPath, "app.asar.unpacked", "standalone", ".env"),
       path.join(resourcesPath, "app.asar.unpacked", ".env.local"),
       path.join(resourcesPath, "app.asar.unpacked", ".env"),
       path.join(process.cwd(), ".env.local"),

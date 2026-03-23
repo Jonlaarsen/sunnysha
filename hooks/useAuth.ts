@@ -4,6 +4,30 @@ import { createClient } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
+const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours
+export const LOGIN_TIMESTAMP_KEY = "loginTimestamp";
+const SESSION_CHECK_INTERVAL_MS = 15 * 60 * 1000; // Check every 15 minutes
+
+function isSessionExpired(): boolean {
+  if (typeof window === "undefined") return false;
+  const ts = localStorage.getItem(LOGIN_TIMESTAMP_KEY);
+  if (!ts) return false;
+  const elapsed = Date.now() - parseInt(ts, 10);
+  return elapsed >= SESSION_MAX_AGE_MS;
+}
+
+function setLoginTimestamp(): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
+  }
+}
+
+function clearLoginTimestamp(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(LOGIN_TIMESTAMP_KEY);
+  }
+}
+
 interface UseAuthReturn {
   user: User | null;
   isAdmin: boolean;
@@ -93,6 +117,24 @@ export function useAuth(): UseAuthReturn {
       if (cancelled) return;
       clearTimeout(timeoutId);
       if (user) {
+        // Session expiry: if no timestamp (legacy session), give 12h from now
+        if (typeof window !== "undefined") {
+          const ts = localStorage.getItem(LOGIN_TIMESTAMP_KEY);
+          if (!ts) setLoginTimestamp();
+        }
+        if (isSessionExpired()) {
+          await supabase.auth.signOut();
+          clearLoginTimestamp();
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("currentView");
+            Object.keys(sessionStorage)
+              .filter((k) => k.startsWith("admin_"))
+              .forEach((k) => sessionStorage.removeItem(k));
+          }
+          setAdminStatusResolved(true);
+          setCheckingAuth(false);
+          return;
+        }
         setUser(user);
         currentUserIdRef.current = user.id;
         // Try cache first; fetch from API when cache is missing.
@@ -120,6 +162,23 @@ export function useAuth(): UseAuthReturn {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        if (event === "SIGNED_IN") setLoginTimestamp();
+        if (isSessionExpired()) {
+          await supabase.auth.signOut();
+          clearLoginTimestamp();
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("currentView");
+            Object.keys(sessionStorage)
+              .filter((k) => k.startsWith("admin_"))
+              .forEach((k) => sessionStorage.removeItem(k));
+          }
+          setUser(null);
+          currentUserIdRef.current = null;
+          setIsAdmin(false);
+          setAdminStatusResolved(true);
+          setCheckingAuth(false);
+          return;
+        }
         setUser(session.user);
         const didUserChange = currentUserIdRef.current !== session.user.id;
         currentUserIdRef.current = session.user.id;
@@ -146,20 +205,32 @@ export function useAuth(): UseAuthReturn {
         setAdminStatusResolved(true);
         setIsLoggingOut(false);
         hasCheckedAdminRef.current = false;
+        clearLoginTimestamp();
         // Clear role cache on logout
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('currentView');
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("currentView");
           Object.keys(sessionStorage)
-            .filter((k) => k.startsWith('admin_'))
+            .filter((k) => k.startsWith("admin_"))
             .forEach((k) => sessionStorage.removeItem(k));
         }
       }
       setCheckingAuth(false);
     });
 
+    // Periodic check: sign out if session has exceeded 12 hours
+    const intervalId = setInterval(async () => {
+      if (cancelled) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && isSessionExpired()) {
+        await supabase.auth.signOut();
+        clearLoginTimestamp();
+      }
+    }, SESSION_CHECK_INTERVAL_MS);
+
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
+      clearInterval(intervalId);
       subscription.unsubscribe();
     };
   }, []);
@@ -178,6 +249,7 @@ export function useAuth(): UseAuthReturn {
     }
 
     if (data.user) {
+      setLoginTimestamp();
       router.refresh();
       return { error: null };
     }
@@ -198,9 +270,9 @@ export function useAuth(): UseAuthReturn {
       setIsAdmin(false);
       setAdminStatusResolved(true);
       hasCheckedAdminRef.current = false; // Reset ref on logout
-      
+      clearLoginTimestamp();
       // Clear all session storage on logout
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         sessionStorage.clear();
       }
       

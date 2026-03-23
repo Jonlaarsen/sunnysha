@@ -20,6 +20,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const admin = supabaseAdmin;
+    if (!admin) {
+      return NextResponse.json(
+        {
+          error: "请在 .env.local 中设置 SUPABASE_SERVICE_ROLE_KEY（Supabase 面板 → Settings → API → service_role key）",
+        },
+        { status: 503 }
+      );
+    }
+
     const { email, name } = await req.json();
 
     if (!email) {
@@ -42,7 +52,7 @@ export async function POST(req: NextRequest) {
     const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12) + "A1!";
 
     // Create user using admin client (bypasses email confirmation)
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    const { data, error } = await admin.auth.admin.createUser({
       email,
       password: tempPassword, // Temporary password, user will set their own
       email_confirm: true, // Auto-confirm email
@@ -64,7 +74,7 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
     
     // Generate password reset token
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+    const { data: resetData, error: resetError } = await admin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {

@@ -20,8 +20,18 @@ export async function GET() {
       );
     }
 
+    const admin = supabaseAdmin;
+    if (!admin) {
+      return NextResponse.json(
+        {
+          error: "请在 .env.local 中设置 SUPABASE_SERVICE_ROLE_KEY（Supabase 面板 → Settings → API → service_role key）",
+        },
+        { status: 503 }
+      );
+    }
+
     // Fetch all users using admin client
-    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: users, error } = await admin.auth.admin.listUsers();
 
     if (error) {
       console.error("Error fetching users:", error);

@@ -20,6 +20,16 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    const admin = supabaseAdmin;
+    if (!admin) {
+      return NextResponse.json(
+        {
+          error: "请在 .env.local 中设置 SUPABASE_SERVICE_ROLE_KEY（Supabase 面板 → Settings → API → service_role key）",
+        },
+        { status: 503 }
+      );
+    }
+
     const { userId, email, name } = await req.json();
 
     if (!userId) {
@@ -57,7 +67,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update user using admin client
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+    const { data, error } = await admin.auth.admin.updateUserById(
       userId,
       updateData
     );
