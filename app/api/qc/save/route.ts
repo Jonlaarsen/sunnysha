@@ -65,6 +65,12 @@ export async function POST(req: NextRequest) {
     // Prepare data for Supabase insert
     const recordData = {
       user_id: userId,
+      submitted_by_email: user.email || null,
+      submitted_by_name:
+        (typeof user.user_metadata?.name === "string" &&
+        user.user_metadata.name.trim().length > 0
+          ? user.user_metadata.name.trim()
+          : null),
       partscode: body.partscode,
       supplier: body.supplier,
       po_number: body.poNumber || null,

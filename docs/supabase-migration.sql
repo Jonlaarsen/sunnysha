@@ -57,4 +57,12 @@ COMMENT ON COLUMN qc_records.user_id IS 'Identifier for the user who created the
 COMMENT ON COLUMN qc_records.partscode IS 'Part code (required)';
 COMMENT ON COLUMN qc_records.supplier IS 'Supplier name (required)';
 
+-- Optional: immutable submitter snapshot (recommended)
+ALTER TABLE qc_records
+  ADD COLUMN IF NOT EXISTS submitted_by_email VARCHAR(255),
+  ADD COLUMN IF NOT EXISTS submitted_by_name VARCHAR(255);
+
+COMMENT ON COLUMN qc_records.submitted_by_email IS 'Immutable snapshot of submitter email at report creation';
+COMMENT ON COLUMN qc_records.submitted_by_name IS 'Immutable snapshot of submitter display name at report creation';
+
 

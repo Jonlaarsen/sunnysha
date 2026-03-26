@@ -15,6 +15,8 @@ import toast from "react-hot-toast";
 interface QCRecord {
   id: number;
   user_id: string;
+  submitted_by_email?: string | null;
+  submitted_by_name?: string | null;
   partscode: string;
   supplier: string;
   po_number?: string | null;
@@ -199,7 +201,10 @@ export default function UserRecordsModal({
     setExpandedRows(newExpanded);
   };
 
-  const getUserEmail = (userId: string): string => {
+  const getSubmitterEmail = (record: QCRecord): string => {
+    const snapshotEmail = (record.submitted_by_email || "").trim();
+    if (snapshotEmail) return snapshotEmail;
+    const userId = record.user_id || "";
     if (userId.includes("@")) return userId;
     const mapped = userMap.get(userId);
     if (mapped) return mapped;
@@ -325,7 +330,7 @@ export default function UserRecordsModal({
 
   const filteredRecords = records.filter((record) => {
     const searchLower = searchTerm.toLowerCase();
-    const userEmail = getUserEmail(record.user_id).toLowerCase();
+    const userEmail = getSubmitterEmail(record).toLowerCase();
     return (
       record.partscode?.toLowerCase().includes(searchLower) ||
       record.supplier?.toLowerCase().includes(searchLower) ||
@@ -409,7 +414,7 @@ export default function UserRecordsModal({
                           <div className="text-sm text-gray-700 flex items-center gap-1">
                             <FaEnvelope className="text-gray-400 text-xs" />
                             <span className="font-medium">用户：</span>{" "}
-                            {getUserEmail(record.user_id)}
+                            {getSubmitterEmail(record)}
                           </div>
                           <div className="text-sm text-gray-700">
                             <span className="font-medium">部品番号：</span>{" "}
@@ -466,10 +471,16 @@ export default function UserRecordsModal({
                               <div className="flex-1">
                                 <span className="text-gray-600">用户邮箱：</span>{" "}
                                 <span className="font-medium text-indigo-600">
-                                  {getUserEmail(record.user_id)}
+                                  {getSubmitterEmail(record)}
                                 </span>
                               </div>
                             </div>
+                            {record.submitted_by_name && (
+                              <div>
+                                <span className="text-gray-600">提交人：</span>{" "}
+                                {record.submitted_by_name}
+                              </div>
+                            )}
                             <div>
                               <span className="text-gray-600">用户 ID：</span>{" "}
                               <span className="font-mono text-xs">
