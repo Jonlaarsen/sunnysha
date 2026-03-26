@@ -121,6 +121,88 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
     return "bg-red-100";
   };
 
+  const handlePrintPdf = () => {
+    if (suppliers.length === 0) {
+      toast.error("暂无可导出的统计数据");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=1200,height=900");
+    if (!printWindow) {
+      toast.error("无法打开打印窗口，请检查浏览器弹窗设置");
+      return;
+    }
+
+    const rowsHtml = suppliers
+      .map(
+        (supplier, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${supplier.supplier}</td>
+            <td>${supplier.totalRecords}</td>
+            <td>${supplier.passCount}</td>
+            <td>${supplier.failCount}</td>
+            <td>${supplier.passRate.toFixed(1)}%</td>
+            <td>${supplier.averageDefectiveCount.toFixed(2)}</td>
+            <td>${formatDate(supplier.latestRecordDate)}</td>
+          </tr>
+        `
+      )
+      .join("");
+
+    const filterText = searchQuery
+      ? `筛选条件：${searchQuery}`
+      : "筛选条件：全部供应商（默认列表）";
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>供应商统计报表</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 16px; color: #111827; }
+            h1 { font-size: 18px; margin: 0 0 6px 0; }
+            p { margin: 0 0 10px 0; font-size: 12px; color: #4b5563; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
+            thead { background: #f3f4f6; }
+            @media print { body { margin: 10mm; } }
+          </style>
+        </head>
+        <body>
+          <h1>供应商统计报表</h1>
+          <p>${filterText}</p>
+          <p>导出时间：${new Date().toLocaleString("zh-CN")}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>供应商</th>
+                <th>总记录数</th>
+                <th>合格</th>
+                <th>不合格</th>
+                <th>合格率</th>
+                <th>平均不合格数</th>
+                <th>最新记录</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -313,6 +395,13 @@ const StatisticsModal = ({ isOpen, onClose, onSupplierClick }: StatisticsModalPr
               className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
             >
               关闭
+            </button>
+            <button
+              onClick={handlePrintPdf}
+              disabled={isLoading || suppliers.length === 0}
+              className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              打印PDF
             </button>
           </div>
         </div>
