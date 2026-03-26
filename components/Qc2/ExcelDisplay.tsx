@@ -25,9 +25,39 @@ const getHeaders = (rows: Record<string, unknown>[]) => {
 const STORAGE_KEY_FILE = "excel_selected_file";
 const STORAGE_KEY_SEARCH = "excel_search_query";
 
+type EditableCellProps = {
+  value: string;
+  onChange: (value: string) => void;
+  onFocusEditor: (editor: HTMLDivElement) => void;
+};
+
+function EditableCell({ value, onChange, onFocusEditor }: EditableCellProps) {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value || "";
+    }
+  }, [value]);
+
+  return (
+    <div
+      ref={editorRef}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={(e) => onChange(e.currentTarget.innerHTML)}
+      onFocus={(e) => onFocusEditor(e.currentTarget)}
+      className="excel-editable-cell w-full min-w-[120px] rounded border border-none px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+    />
+  );
+}
+
 export default function ExcelDisplay() {
   const [selectedFile, setSelectedFile] = useState<ExcelFile | null>(null);
-  const [editedData, setEditedData] = useState<Record<string, Record<number, Record<string, string>>>>({});
+  const [editedData, setEditedData] = useState<
+    Record<string, Record<number, Record<string, string>>>
+  >({});
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,44 +69,52 @@ export default function ExcelDisplay() {
   });
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [typingColor, setTypingColor] = useState("#111827");
   const searchRef = useRef<HTMLDivElement>(null);
+  const printContentRef = useRef<HTMLDivElement>(null);
+  const activeEditorRef = useRef<HTMLDivElement | null>(null);
 
   // Load selected file from SMB share
-  const loadFile = useCallback(async (fileName: string, updateSearchQuery: boolean = true) => {
-    try {
-      setIsLoadingFile(true);
-      setError(null);
-      if (updateSearchQuery) {
-        setSearchQuery(fileName);
-      }
-      setShowDropdown(false);
+  const loadFile = useCallback(
+    async (fileName: string, updateSearchQuery: boolean = true) => {
+      try {
+        setIsLoadingFile(true);
+        setError(null);
+        if (updateSearchQuery) {
+          setSearchQuery(fileName);
+        }
+        setShowDropdown(false);
 
-      // Use SMB endpoint to load Excel file
-      const url = `/api/excel/smb?file=${encodeURIComponent(fileName)}`;
-      const res = await fetch(url);
+        // Use SMB endpoint to load Excel file
+        const url = `/api/excel/smb?file=${encodeURIComponent(fileName)}`;
+        const res = await fetch(url);
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "无法加载 Excel 文件。" }));
-        throw new Error(errorData.message || "无法加载 Excel 文件。");
-      }
+        if (!res.ok) {
+          const errorData = await res
+            .json()
+            .catch(() => ({ message: "无法加载 Excel 文件。" }));
+          throw new Error(errorData.message || "无法加载 Excel 文件。");
+        }
 
-      const data: ExcelFile = await res.json();
-      setSelectedFile(data);
-      
-      // Save selected file to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY_FILE, fileName);
+        const data: ExcelFile = await res.json();
+        setSelectedFile(data);
+
+        // Save selected file to localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY_FILE, fileName);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+        setSelectedFile(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(STORAGE_KEY_FILE);
+        }
+      } finally {
+        setIsLoadingFile(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setSelectedFile(null);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(STORAGE_KEY_FILE);
-      }
-    } finally {
-      setIsLoadingFile(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Load saved file and edited data on mount
   useEffect(() => {
@@ -104,14 +142,17 @@ export default function ExcelDisplay() {
     if (selectedFile && typeof window !== "undefined") {
       const storageKey = `excel_edited_${selectedFile.fileName}`;
       const savedEditedData = localStorage.getItem(storageKey);
-      
+
       if (savedEditedData) {
         try {
           const parsed = JSON.parse(savedEditedData);
           setEditedData(parsed);
         } catch {
           // If parsing fails, initialize empty
-          const newEditedData: Record<string, Record<number, Record<string, string>>> = {};
+          const newEditedData: Record<
+            string,
+            Record<number, Record<string, string>>
+          > = {};
           selectedFile.sheets.forEach((sheet) => {
             newEditedData[sheet.sheetName] = {};
           });
@@ -119,7 +160,10 @@ export default function ExcelDisplay() {
         }
       } else {
         // Initialize empty edited data structure
-        const newEditedData: Record<string, Record<number, Record<string, string>>> = {};
+        const newEditedData: Record<
+          string,
+          Record<number, Record<string, string>>
+        > = {};
         selectedFile.sheets.forEach((sheet) => {
           newEditedData[sheet.sheetName] = {};
         });
@@ -128,15 +172,29 @@ export default function ExcelDisplay() {
     }
   }, [selectedFile]);
 
-  const getCellValue = (sheetName: string, rowIndex: number, header: string, originalValue: unknown): string => {
+  const getCellValue = (
+    sheetName: string,
+    rowIndex: number,
+    header: string,
+    originalValue: unknown,
+  ): string => {
     const sheetData = editedData[sheetName];
-    if (sheetData && sheetData[rowIndex] && sheetData[rowIndex][header] !== undefined) {
+    if (
+      sheetData &&
+      sheetData[rowIndex] &&
+      sheetData[rowIndex][header] !== undefined
+    ) {
       return sheetData[rowIndex][header];
     }
     return String(originalValue ?? "");
   };
 
-  const updateCellValue = (sheetName: string, rowIndex: number, header: string, value: string) => {
+  const updateCellValue = (
+    sheetName: string,
+    rowIndex: number,
+    header: string,
+    value: string,
+  ) => {
     setEditedData((prev) => {
       const updated = {
         ...prev,
@@ -148,13 +206,13 @@ export default function ExcelDisplay() {
           },
         },
       };
-      
+
       // Save to localStorage whenever edited data changes
       if (selectedFile && typeof window !== "undefined") {
         const storageKey = `excel_edited_${selectedFile.fileName}`;
         localStorage.setItem(storageKey, JSON.stringify(updated));
       }
-      
+
       return updated;
     });
   };
@@ -162,7 +220,10 @@ export default function ExcelDisplay() {
   // Handle clicks outside dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     }
@@ -187,8 +248,10 @@ export default function ExcelDisplay() {
         const res = await fetch(url);
 
         if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "无法搜索文件。" }));
-        throw new Error(errorData.message || "无法搜索文件。");
+          const errorData = await res
+            .json()
+            .catch(() => ({ message: "无法搜索文件。" }));
+          throw new Error(errorData.message || "无法搜索文件。");
         }
 
         const data: string[] = await res.json();
@@ -208,6 +271,92 @@ export default function ExcelDisplay() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  const handleSavePdf = () => {
+    if (!selectedFile || !printContentRef.current) return;
+
+    const printWindow = window.open("", "_blank", "width=1200,height=900");
+    if (!printWindow) {
+      setError("无法打开打印窗口，请检查浏览器弹窗设置。");
+      return;
+    }
+
+    const contentHtml = printContentRef.current.innerHTML;
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${selectedFile.fileName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 16px; color: #111827; }
+            h1 { font-size: 18px; margin: 0 0 12px 0; }
+            p { margin: 0 0 8px 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+            th, td { border: 1px solid #d4d4d8; padding: 6px 8px; text-align: left; vertical-align: top; }
+            thead { background: #f4f4f5; }
+            .pdf-hide { display: none !important; }
+            @media print {
+              body { margin: 10mm; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${selectedFile.fileName}</h1>
+          ${contentHtml}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
+  const applyGlobalTextColor = (color: string) => {
+    setTypingColor(color);
+
+    const activeEditor = activeEditorRef.current;
+    if (!activeEditor) return;
+
+    const selection = window.getSelection();
+    const hasSelectionInActiveEditor =
+      selection &&
+      selection.rangeCount > 0 &&
+      selection.anchorNode &&
+      activeEditor.contains(selection.anchorNode);
+
+    if (!hasSelectionInActiveEditor) {
+      activeEditor.focus();
+    }
+
+    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand("foreColor", false, color);
+    activeEditor.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+
+  const applyTypingColorToEditor = (editor: HTMLDivElement) => {
+    // Ensure selection/caret is inside this editor before applying typing color.
+    requestAnimationFrame(() => {
+      editor.focus();
+      const selection = window.getSelection();
+      if (!selection) return;
+
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      document.execCommand("styleWithCSS", false, "true");
+      document.execCommand("foreColor", false, typingColor);
+    });
+  };
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 py-6">
@@ -248,13 +397,24 @@ export default function ExcelDisplay() {
                   localStorage.removeItem(STORAGE_KEY_FILE);
                   localStorage.removeItem(STORAGE_KEY_SEARCH);
                   if (selectedFile) {
-                    localStorage.removeItem(`excel_edited_${selectedFile.fileName}`);
+                    localStorage.removeItem(
+                      `excel_edited_${selectedFile.fileName}`,
+                    );
                   }
                 }
               }}
               className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50 focus:outline-none focus:ring-1 focus:ring-zinc-500"
             >
               清除
+            </button>
+          )}
+          {selectedFile && (
+            <button
+              type="button"
+              onClick={handleSavePdf}
+              className="rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            >
+              保存PDF
             </button>
           )}
         </div>
@@ -274,25 +434,63 @@ export default function ExcelDisplay() {
           </div>
         )}
 
-        {showDropdown && searchQuery && !isLoading && searchResults.length === 0 && (
-          <div className="absolute z-10 mt-1 w-full rounded border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-500 shadow-lg">
-            未找到与「{searchQuery}」匹配的文件
-          </div>
-        )}
+        {showDropdown &&
+          searchQuery &&
+          !isLoading &&
+          searchResults.length === 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-500 shadow-lg">
+              未找到与「{searchQuery}」匹配的文件
+            </div>
+          )}
       </div>
 
-      {error && (
-        <p className="px-4 text-sm text-red-600">
-          {error}
-        </p>
+      {selectedFile && (
+        <div className="fixed right-4 top-1/2 z-20 -translate-y-1/2 rounded-lg border border-zinc-300 bg-white p-2 shadow-md">
+          <div className="mb-1 text-[10px] text-zinc-800">文字颜色</div>
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                applyGlobalTextColor("#dc2626");
+              }}
+              className={`rounded border border-zinc-100 text-white px-2 py-1 text-xs  hover:bg-red-600 ${
+                typingColor === "#dc2626"
+                  ? "bg-red-500 ring-1 ring-red-300"
+                  : "bg-red-500/50"
+              }`}
+            >
+              红色
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                applyGlobalTextColor("#16a34a");
+              }}
+              className={`rounded border border-zinc-100 text-white px-2 py-1 text-xs  hover:bg-green-600 ${
+                typingColor === "#16a34a"
+                  ? "bg-green-500 ring-1 ring-green-300"
+                  : "bg-green-500/50"
+              }`}
+            >
+              绿色
+            </button>
+          </div>
+        </div>
       )}
+
+      {error && <p className="px-4 text-sm text-red-600">{error}</p>}
 
       {isLoadingFile && (
         <p className="px-4 text-sm text-zinc-500">正在加载 Excel 文件…</p>
       )}
 
       {selectedFile && !isLoadingFile && (
-        <div className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+        <div
+          ref={printContentRef}
+          className="rounded-lg border border-zinc-200 bg-white shadow-sm"
+        >
           <div className="border-b border-zinc-200 px-4 py-2 text-base font-semibold text-zinc-800">
             {selectedFile.fileName}
           </div>
@@ -307,9 +505,7 @@ export default function ExcelDisplay() {
                   </p>
 
                   {sheet.rows.length === 0 ? (
-                    <p className="text-xs text-zinc-400">
-                      此工作表无数据。
-                    </p>
+                    <p className="text-xs text-zinc-400">此工作表无数据。</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[600px] border border-zinc-200 text-xs">
@@ -333,8 +529,15 @@ export default function ExcelDisplay() {
                             >
                               {headers.map((header) => {
                                 const originalValue = row[header];
-                                const cellValue = getCellValue(sheet.sheetName, rowIndex, header, originalValue);
-                                const isEmpty = !originalValue || String(originalValue).trim() === "";
+                                const cellValue = getCellValue(
+                                  sheet.sheetName,
+                                  rowIndex,
+                                  header,
+                                  originalValue,
+                                );
+                                const isEmpty =
+                                  !originalValue ||
+                                  String(originalValue).trim() === "";
 
                                 return (
                                   <td
@@ -342,17 +545,25 @@ export default function ExcelDisplay() {
                                     className="border border-zinc-200 px-3 py-1 align-top"
                                   >
                                     {isEmpty ? (
-                                      <input
-                                        type="text"
+                                      <EditableCell
                                         value={cellValue}
-                                        onChange={(e) =>
-                                          updateCellValue(sheet.sheetName, rowIndex, header, e.target.value)
+                                        onChange={(nextValue) =>
+                                          updateCellValue(
+                                            sheet.sheetName,
+                                            rowIndex,
+                                            header,
+                                            nextValue,
+                                          )
                                         }
-                                        className="w-full min-w-[80px] text-blue-600 rounded px-2 py-1 text-xs focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                                        placeholder=""
+                                        onFocusEditor={(editor) => {
+                                          activeEditorRef.current = editor;
+                                          applyTypingColorToEditor(editor);
+                                        }}
                                       />
                                     ) : (
-                                      <span className="block py-1">{cellValue}</span>
+                                      <span className="block py-1">
+                                        {cellValue}
+                                      </span>
                                     )}
                                   </td>
                                 );

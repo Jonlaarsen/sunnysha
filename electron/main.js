@@ -1,11 +1,10 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
 
 const isDev = !app.isPackaged && process.env.NODE_ENV === "development";
 let nextServer = null;
-let mainWindow = null;
 
 let hasShownError = false;
 function showErrorAndQuit(title, message) {
@@ -17,12 +16,6 @@ function showErrorAndQuit(title, message) {
     console.error(`[Electron] ${title}:`, message);
   }
   app.quit();
-}
-
-function sendUpdateEvent(data) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send("update-event", data);
-  }
 }
 
 /**
@@ -67,55 +60,8 @@ function loadEnvVars() {
   }
 }
 
-function setupAutoUpdater() {
-  if (isDev) return;
-  try {
-    const { autoUpdater } = require("electron-updater");
-    autoUpdater.autoDownload = false;
-
-    autoUpdater.on("checking-for-update", () => {
-      sendUpdateEvent({ type: "checking" });
-    });
-
-    autoUpdater.on("update-available", (info) => {
-      sendUpdateEvent({ type: "available", version: info.version });
-      autoUpdater.downloadUpdate();
-    });
-
-    autoUpdater.on("update-not-available", () => {
-      sendUpdateEvent({ type: "not-available" });
-    });
-
-    autoUpdater.on("download-progress", (progress) => {
-      sendUpdateEvent({
-        type: "progress",
-        percent: progress.percent,
-        bytesPerSecond: progress.bytesPerSecond,
-        transferred: progress.transferred,
-        total: progress.total,
-      });
-    });
-
-    autoUpdater.on("update-downloaded", (info) => {
-      sendUpdateEvent({ type: "downloaded", version: info.version });
-    });
-
-    autoUpdater.on("error", (err) => {
-      console.error("[Electron] Auto-update error:", err);
-      sendUpdateEvent({ type: "error", message: err.message });
-    });
-
-    app.on("browser-window-created", () => {
-      setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 3000);
-    });
-  } catch (err) {
-    console.warn("[Electron] Auto-updater not configured:", err.message);
-  }
-}
-
 function createWindow() {
-  const preloadPath = path.join(__dirname, "preload.js");
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     show: false,
@@ -123,7 +69,6 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
-      preload: fs.existsSync(preloadPath) ? preloadPath : undefined,
     },
   });
 
@@ -138,29 +83,12 @@ function createWindow() {
   });
 
   mainWindow.on("closed", () => {
-    mainWindow = null;
     if (nextServer) {
       nextServer.kill();
       nextServer = null;
     }
   });
 }
-
-ipcMain.handle("check-for-updates", async () => {
-  if (isDev) return;
-  try {
-    const { autoUpdater } = require("electron-updater");
-    const result = await autoUpdater.checkForUpdates();
-    return { check: true };
-  } catch (err) {
-    return { error: err.message };
-  }
-});
-
-ipcMain.handle("quit-and-install", () => {
-  const { autoUpdater } = require("electron-updater");
-  autoUpdater.quitAndInstall(false, true);
-});
 
 app.on("web-contents-created", (_, contents) => {
   contents.on("render-process-gone", (_, details) => {
@@ -172,7 +100,6 @@ app.on("web-contents-created", (_, contents) => {
 
 app.whenReady().then(() => {
   loadEnvVars();
-  setupAutoUpdater();
 
   if (isDev) {
     createWindow();
