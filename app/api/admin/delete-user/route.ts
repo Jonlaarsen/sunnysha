@@ -50,6 +50,27 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // Prevent deleting any admin account
+    const { data: targetProfile, error: targetProfileError } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", targetUserId)
+      .maybeSingle();
+
+    if (targetProfileError) {
+      return NextResponse.json(
+        { error: `无法校验目标用户角色：${targetProfileError.message}` },
+        { status: 500 }
+      );
+    }
+
+    if (targetProfile?.role === "admin") {
+      return NextResponse.json(
+        { error: "不能删除管理员账号" },
+        { status: 403 }
+      );
+    }
+
     // Delete user using admin client
     const { error } = await admin.auth.admin.deleteUser(targetUserId);
 
