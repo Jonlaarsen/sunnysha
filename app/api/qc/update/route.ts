@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
-import { getAuthenticatedUser } from "@/lib/supabase-server";
+import { createClient, isAuthenticatedAdmin } from "@/lib/supabase-server";
 
 interface UpdateFormData {
   id: number; // Required: the record ID from Supabase
@@ -33,7 +32,7 @@ interface UpdateFormData {
 export async function PATCH(req: NextRequest) {
   try {
     // Require authentication
-    const user = await getAuthenticatedUser();
+    const { user, isAdmin } = await isAuthenticatedAdmin();
     if (!user) {
       return NextResponse.json(
         { 
@@ -67,15 +66,15 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Only allow editing today's reports (inspection_date must be today)
+    // Non-admin users can only edit today's reports (inspection_date must be today)
     const supabase = await createClient();
     const { data: existing } = await supabase
       .from("qc_records")
-      .select("inspection_date")
+      .select("inspection_date, user_id")
       .eq("id", body.id)
       .single();
 
-    if (existing?.inspection_date) {
+    if (!isAdmin && existing?.inspection_date) {
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       const recordDate = String(existing.inspection_date).split("T")[0].split(" ")[0];
@@ -90,8 +89,8 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Use authenticated user's ID
-    const userId = user.id;
+    // Non-admin edits remain attributed to the user; admin edits preserve original owner
+    const userId = isAdmin ? existing?.user_id || user.id : user.id;
 
     // Prepare data for Supabase update
     const recordData = {

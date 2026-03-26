@@ -50,6 +50,24 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    const { data: targetUserData } = await admin.auth.admin.getUserById(targetUserId);
+    const deletedUserEmail = targetUserData.user?.email || null;
+    const archivedUserId = `deleted:${targetUserId}`;
+
+    // Keep reports: reassign records to an archived user marker before deleting auth user
+    const { error: reassignmentError } = await admin
+      .from("qc_records")
+      .update({ user_id: archivedUserId })
+      .eq("user_id", targetUserId);
+
+    if (reassignmentError) {
+      console.error("Error preserving user reports before delete:", reassignmentError);
+      return NextResponse.json(
+        { error: `无法保留该用户的报告：${reassignmentError.message}` },
+        { status: 500 }
+      );
+    }
+
     // Delete user using admin client
     const { error } = await admin.auth.admin.deleteUser(targetUserId);
 
@@ -64,7 +82,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "User deleted successfully",
+        message: "用户已删除，历史报告已保留",
+        archivedUserId,
+        archivedUserEmail: deletedUserEmail,
       },
       { status: 200 }
     );

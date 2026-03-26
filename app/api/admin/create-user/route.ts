@@ -70,8 +70,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate password reset link for the user to set their password
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    // Generate password reset link for the user to set their password.
+    // Prefer configured URL and never default to localhost.
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      "https://sunnysha.vercel.app";
     
     // Generate password reset token
     const { data: resetData, error: resetError } = await admin.auth.admin.generateLink({

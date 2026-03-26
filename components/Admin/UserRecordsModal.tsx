@@ -1,6 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaTimes, FaSpinner, FaChevronDown, FaChevronUp, FaEye, FaEnvelope } from "react-icons/fa";
+import {
+  FaTimes,
+  FaSpinner,
+  FaChevronDown,
+  FaChevronUp,
+  FaEye,
+  FaEnvelope,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 import toast from "react-hot-toast";
 
 interface QCRecord {
@@ -45,6 +54,32 @@ interface User {
   email: string;
 }
 
+type EditableRecord = {
+  id: number;
+  partscode: string;
+  supplier: string;
+  po_number: string;
+  delivery_date: string;
+  inspection_date: string;
+  delivery_quantity: string;
+  return_quantity: string;
+  lot_number: string;
+  lot_quantity: string;
+  inspector: string;
+  sample_size: string;
+  defective_count: string;
+  judgement: string;
+  strictness_adjustment: string;
+  destination: string;
+  group_leader_confirmation: string;
+  quality_summary: string;
+  remarks: string;
+  selection_a: boolean;
+  selection_b: boolean;
+  selection_c: boolean;
+  selection_d: boolean;
+};
+
 export default function UserRecordsModal({
   isOpen,
   onClose,
@@ -56,6 +91,10 @@ export default function UserRecordsModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [userMap, setUserMap] = useState<Map<string, string>>(new Map());
+  const [recordToDelete, setRecordToDelete] = useState<QCRecord | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<EditableRecord | null>(null);
+  const [updatingRecord, setUpdatingRecord] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -161,7 +200,127 @@ export default function UserRecordsModal({
   };
 
   const getUserEmail = (userId: string): string => {
-    return userMap.get(userId) || "未知";
+    const mapped = userMap.get(userId);
+    if (mapped) return mapped;
+    if (userId.startsWith("deleted:")) return "已删除用户";
+    return "未知";
+  };
+
+  const toEditableRecord = (record: QCRecord): EditableRecord => ({
+    id: record.id,
+    partscode: String(record.partscode || ""),
+    supplier: String(record.supplier || ""),
+    po_number: String(record.po_number || ""),
+    delivery_date: String(record.delivery_date || ""),
+    inspection_date: String(record.inspection_date || ""),
+    delivery_quantity:
+      record.delivery_quantity === null || record.delivery_quantity === undefined
+        ? ""
+        : String(record.delivery_quantity),
+    return_quantity:
+      record.return_quantity === null || record.return_quantity === undefined
+        ? ""
+        : String(record.return_quantity),
+    lot_number: String(record.lot_number || ""),
+    lot_quantity:
+      record.lot_quantity === null || record.lot_quantity === undefined
+        ? ""
+        : String(record.lot_quantity),
+    inspector: String(record.inspector || ""),
+    sample_size:
+      record.sample_size === null || record.sample_size === undefined
+        ? ""
+        : String(record.sample_size),
+    defective_count:
+      record.defective_count === null || record.defective_count === undefined
+        ? ""
+        : String(record.defective_count),
+    judgement: String(record.judgement || ""),
+    strictness_adjustment: String(record.strictness_adjustment || ""),
+    destination: String(record.destination || ""),
+    group_leader_confirmation: String(record.group_leader_confirmation || ""),
+    quality_summary: String(record.quality_summary || ""),
+    remarks: String(record.remarks || ""),
+    selection_a: Boolean(record.selection_a),
+    selection_b: Boolean(record.selection_b),
+    selection_c: Boolean(record.selection_c),
+    selection_d: Boolean(record.selection_d),
+  });
+
+  const updateEditableField = (field: keyof EditableRecord, value: string | boolean) => {
+    setEditingRecord((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
+    setUpdatingRecord(true);
+    try {
+      const response = await fetch("/api/qc/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingRecord.id,
+          partscode: editingRecord.partscode,
+          supplier: editingRecord.supplier,
+          poNumber: editingRecord.po_number,
+          deliveryDate: editingRecord.delivery_date,
+          inspectionDate: editingRecord.inspection_date,
+          deliveryQuantity: editingRecord.delivery_quantity,
+          returnQuantity: editingRecord.return_quantity,
+          lotNumber: editingRecord.lot_number,
+          lotQuantity: editingRecord.lot_quantity,
+          inspector: editingRecord.inspector,
+          sampleSize: editingRecord.sample_size,
+          defectiveCount: editingRecord.defective_count,
+          judgement: editingRecord.judgement,
+          strictnessAdjustment: editingRecord.strictness_adjustment,
+          selections: {
+            A: editingRecord.selection_a,
+            B: editingRecord.selection_b,
+            C: editingRecord.selection_c,
+            D: editingRecord.selection_d,
+          },
+          destination: editingRecord.destination,
+          groupLeaderConfirmation: editingRecord.group_leader_confirmation,
+          qualitySummary: editingRecord.quality_summary,
+          remarks: editingRecord.remarks,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || result.error || "更新失败");
+      }
+      toast.success(result.message || "记录已更新");
+      setEditingRecord(null);
+      fetchRecords();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "更新失败");
+    } finally {
+      setUpdatingRecord(false);
+    }
+  };
+
+  const handleConfirmDeleteRecord = async () => {
+    if (!recordToDelete) return;
+    setDeletingRecord(true);
+    try {
+      const response = await fetch("/api/qc/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordToDelete.id }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || result.error || "删除失败");
+      }
+      toast.success(result.message || "记录已删除");
+      setRecordToDelete(null);
+      fetchRecords();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "删除失败");
+    } finally {
+      setDeletingRecord(false);
+    }
   };
 
   const filteredRecords = records.filter((record) => {
@@ -265,7 +424,31 @@ export default function UserRecordsModal({
                             {formatDate(record.created_at)}
                           </div>
                         </div>
-                        <FaEye className="text-indigo-500" />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingRecord(toEditableRecord(record));
+                            }}
+                            className="inline-flex items-center gap-1 rounded-md border border-indigo-200 px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50"
+                          >
+                            <FaEdit />
+                            编辑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRecordToDelete(record);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                          >
+                            <FaTrash />
+                            删除
+                          </button>
+                          <FaEye className="text-indigo-500" />
+                        </div>
                       </div>
                     </div>
 
@@ -466,6 +649,89 @@ export default function UserRecordsModal({
           </button>
         </div>
       </div>
+
+      {recordToDelete && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">确认删除报告</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              确定要删除报告 ID {recordToDelete.id} 吗？此操作不可撤销。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setRecordToDelete(null)}
+                disabled={deletingRecord}
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteRecord}
+                disabled={deletingRecord}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deletingRecord ? <FaSpinner className="animate-spin" /> : null}
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingRecord && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">编辑报告 #{editingRecord.id}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <input className="border rounded p-2" placeholder="部品番号" value={editingRecord.partscode} onChange={(e) => updateEditableField("partscode", e.target.value)} />
+              <input className="border rounded p-2" placeholder="供方" value={editingRecord.supplier} onChange={(e) => updateEditableField("supplier", e.target.value)} />
+              <input className="border rounded p-2" placeholder="P/O" value={editingRecord.po_number} onChange={(e) => updateEditableField("po_number", e.target.value)} />
+              <input className="border rounded p-2" placeholder="检查员" value={editingRecord.inspector} onChange={(e) => updateEditableField("inspector", e.target.value)} />
+              <input className="border rounded p-2" type="date" value={editingRecord.delivery_date ? editingRecord.delivery_date.split("T")[0] : ""} onChange={(e) => updateEditableField("delivery_date", e.target.value)} />
+              <input className="border rounded p-2" type="date" value={editingRecord.inspection_date ? editingRecord.inspection_date.split("T")[0] : ""} onChange={(e) => updateEditableField("inspection_date", e.target.value)} />
+              <input className="border rounded p-2" placeholder="纳入数" value={editingRecord.delivery_quantity} onChange={(e) => updateEditableField("delivery_quantity", e.target.value)} />
+              <input className="border rounded p-2" placeholder="返品数" value={editingRecord.return_quantity} onChange={(e) => updateEditableField("return_quantity", e.target.value)} />
+              <input className="border rounded p-2" placeholder="Lot No." value={editingRecord.lot_number} onChange={(e) => updateEditableField("lot_number", e.target.value)} />
+              <input className="border rounded p-2" placeholder="Lot 数量" value={editingRecord.lot_quantity} onChange={(e) => updateEditableField("lot_quantity", e.target.value)} />
+              <input className="border rounded p-2" placeholder="抽样数" value={editingRecord.sample_size} onChange={(e) => updateEditableField("sample_size", e.target.value)} />
+              <input className="border rounded p-2" placeholder="不合格数" value={editingRecord.defective_count} onChange={(e) => updateEditableField("defective_count", e.target.value)} />
+              <input className="border rounded p-2" placeholder="判定" value={editingRecord.judgement} onChange={(e) => updateEditableField("judgement", e.target.value)} />
+              <input className="border rounded p-2" placeholder="严格度调整" value={editingRecord.strictness_adjustment} onChange={(e) => updateEditableField("strictness_adjustment", e.target.value)} />
+              <input className="border rounded p-2" placeholder="出货目的地" value={editingRecord.destination} onChange={(e) => updateEditableField("destination", e.target.value)} />
+              <input className="border rounded p-2" placeholder="组长确认" value={editingRecord.group_leader_confirmation} onChange={(e) => updateEditableField("group_leader_confirmation", e.target.value)} />
+            </div>
+            <textarea className="mt-4 w-full border rounded p-2 text-sm" rows={3} placeholder="品质摘要" value={editingRecord.quality_summary} onChange={(e) => updateEditableField("quality_summary", e.target.value)} />
+            <textarea className="mt-3 w-full border rounded p-2 text-sm" rows={3} placeholder="备注" value={editingRecord.remarks} onChange={(e) => updateEditableField("remarks", e.target.value)} />
+            <div className="mt-4 flex flex-wrap gap-4 text-sm">
+              <label className="inline-flex items-center gap-2"><input type="checkbox" checked={editingRecord.selection_a} onChange={(e) => updateEditableField("selection_a", e.target.checked)} />选项 A</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" checked={editingRecord.selection_b} onChange={(e) => updateEditableField("selection_b", e.target.checked)} />选项 B</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" checked={editingRecord.selection_c} onChange={(e) => updateEditableField("selection_c", e.target.checked)} />选项 C</label>
+              <label className="inline-flex items-center gap-2"><input type="checkbox" checked={editingRecord.selection_d} onChange={(e) => updateEditableField("selection_d", e.target.checked)} />选项 D</label>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingRecord(null)}
+                disabled={updatingRecord}
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={updatingRecord || !editingRecord.partscode || !editingRecord.supplier}
+                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {updatingRecord ? <FaSpinner className="animate-spin" /> : null}
+                保存修改
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "QC System <noreply@yourdomain.com>",
+      from: process.env.EMAIL_FROM || "Sunny QC <noreply@yourdomain.com>",
       to: email,
       subject: "Set Up Your QC System Account",
       html: `

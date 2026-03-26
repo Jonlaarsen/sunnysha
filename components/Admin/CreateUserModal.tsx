@@ -43,6 +43,7 @@ export default function CreateUserModal({
   // Delete user state
   const [deleteUserId, setDeleteUserId] = useState<string>("");
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -202,6 +203,11 @@ export default function CreateUserModal({
       toast.error("请选择要删除的用户");
       return;
     }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!deleteUserId) return;
 
     setDeleting(true);
 
@@ -244,6 +250,7 @@ export default function CreateUserModal({
       });
     } finally {
       setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -606,6 +613,36 @@ export default function CreateUserModal({
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-xl bg-white shadow-2xl p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">确认删除用户</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              确定要删除该用户吗？用户账户会被删除，但该用户历史报告会保留。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? <FaSpinner className="animate-spin" /> : null}
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
