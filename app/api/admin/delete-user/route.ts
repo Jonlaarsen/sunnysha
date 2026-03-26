@@ -52,9 +52,9 @@ export async function DELETE(req: NextRequest) {
 
     const { data: targetUserData } = await admin.auth.admin.getUserById(targetUserId);
     const deletedUserEmail = targetUserData.user?.email || null;
-    const archivedUserId = `deleted:${targetUserId}`;
+    const archivedUserId = deletedUserEmail || targetUserId;
 
-    // Keep reports: reassign records to an archived user marker before deleting auth user
+    // Keep reports: preserve submitter identity by storing original email when available
     const { error: reassignmentError } = await admin
       .from("qc_records")
       .update({ user_id: archivedUserId })
@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "用户已删除，历史报告已保留",
+        message: "用户已删除，历史报告提交人信息已保留",
         archivedUserId,
         archivedUserEmail: deletedUserEmail,
       },

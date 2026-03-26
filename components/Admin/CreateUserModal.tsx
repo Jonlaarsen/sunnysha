@@ -197,13 +197,17 @@ export default function CreateUserModal({
     }
   };
 
-  const handleDeleteSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const requestDeleteConfirmation = () => {
     if (!deleteUserId) {
       toast.error("请选择要删除的用户");
       return;
     }
     setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    requestDeleteConfirmation();
   };
 
   const confirmDeleteUser = async () => {
@@ -593,8 +597,8 @@ export default function CreateUserModal({
           )}
           {activeTab === "delete" && (
             <button
-              type="submit"
-              form="delete-user-form"
+              type="button"
+              onClick={requestDeleteConfirmation}
               disabled={deleting || !deleteUserId}
               className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >

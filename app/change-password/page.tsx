@@ -41,15 +41,15 @@ export default function ChangePasswordPage() {
     const errors: string[] = [];
 
     if (password.length < 8) {
-      errors.push("At least 8 characters");
+      errors.push("至少 8 个字符");
     }
 
     if (!/[a-zA-Z]/.test(password)) {
-      errors.push("At least one letter");
+      errors.push("至少一个字母");
     }
 
     if (!/[0-9]/.test(password)) {
-      errors.push("At least one number");
+      errors.push("至少一个数字");
     }
 
     return {
@@ -80,7 +80,7 @@ export default function ChangePasswordPage() {
 
     // Validate passwords match
     if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match", {
+      toast.error("新密码两次输入不一致", {
         icon: <FaTimes />,
       });
       setLoading(false);
@@ -90,7 +90,7 @@ export default function ChangePasswordPage() {
     // Validate password strength
     const validation = validatePassword(newPassword);
     if (!validation.valid) {
-      toast.error("Password does not meet requirements", {
+      toast.error("密码不符合要求", {
         icon: <FaTimes />,
       });
       setLoading(false);
@@ -113,10 +113,10 @@ export default function ChangePasswordPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to change password");
+        throw new Error(result.error || "修改密码失败");
       }
 
-      toast.success(result.message || "Password changed successfully!", {
+      toast.success(result.message || "密码修改成功！", {
         icon: <FaCheck />,
         duration: 3000,
       });
@@ -127,7 +127,7 @@ export default function ChangePasswordPage() {
       }, 1500);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to change password";
+        error instanceof Error ? error.message : "修改密码失败";
       toast.error(errorMessage, {
         icon: <FaTimes />,
         duration: 5000,
@@ -142,7 +142,7 @@ export default function ChangePasswordPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-400 via-indigo-500 to-sky-300">
         <div className="text-center">
           <FaSpinner className="animate-spin text-4xl text-white mx-auto mb-4" />
-          <p className="text-white text-lg">Loading...</p>
+          <p className="text-white text-lg">加载中...</p>
         </div>
       </div>
     );
@@ -160,10 +160,10 @@ export default function ChangePasswordPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
-              Change Password
+              修改密码
             </h1>
             <p className="text-sm text-slate-500 mt-2">
-              Please set a new password to continue
+              请设置新密码后继续使用
             </p>
           </div>
         </div>
@@ -172,14 +172,14 @@ export default function ChangePasswordPage() {
           {/* Current Password */}
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-1">
-              Current Password
+              当前密码
             </label>
             <div className="relative">
               <input
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter your current password"
+                placeholder="请输入当前密码"
                 required
                 className="w-full p-3 pr-10 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
               />
@@ -196,14 +196,14 @@ export default function ChangePasswordPage() {
           {/* New Password */}
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-1">
-              New Password
+              新密码
             </label>
             <div className="relative">
               <input
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter your new password"
+                placeholder="请输入新密码"
                 required
                 className="w-full p-3 pr-10 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
               />
@@ -241,7 +241,7 @@ export default function ChangePasswordPage() {
                   />
                 </div>
                 <p className="text-xs text-slate-500">
-                  Strength:{" "}
+                  强度：{" "}
                   <span
                     className={`font-semibold ${
                       passwordStrength === "weak"
@@ -251,7 +251,11 @@ export default function ChangePasswordPage() {
                         : "text-green-500"
                     }`}
                   >
-                    {passwordStrength.toUpperCase()}
+                    {passwordStrength === "weak"
+                      ? "弱"
+                      : passwordStrength === "medium"
+                        ? "中"
+                        : "强"}
                   </span>
                 </p>
               </div>
@@ -259,7 +263,7 @@ export default function ChangePasswordPage() {
 
             {/* Password Requirements */}
             <div className="mt-2 text-xs text-slate-600 space-y-1">
-              <p className="font-medium mb-1">Requirements:</p>
+              <p className="font-medium mb-1">密码要求：</p>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   {newPassword.length >= 8 ? (
@@ -267,7 +271,7 @@ export default function ChangePasswordPage() {
                   ) : (
                     <FaTimes className="text-red-500" />
                   )}
-                  <span>At least 8 characters</span>
+                  <span>至少 8 个字符</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {/[a-zA-Z]/.test(newPassword) ? (
@@ -275,7 +279,7 @@ export default function ChangePasswordPage() {
                   ) : (
                     <FaTimes className="text-red-500" />
                   )}
-                  <span>At least one letter</span>
+                  <span>至少一个字母</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {/[0-9]/.test(newPassword) ? (
@@ -283,7 +287,7 @@ export default function ChangePasswordPage() {
                   ) : (
                     <FaTimes className="text-red-500" />
                   )}
-                  <span>At least one number</span>
+                  <span>至少一个数字</span>
                 </div>
               </div>
             </div>
@@ -292,14 +296,14 @@ export default function ChangePasswordPage() {
           {/* Confirm Password */}
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-1">
-              Confirm New Password
+              确认新密码
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your new password"
+                placeholder="请再次输入新密码"
                 required
                 className="w-full p-3 pr-10 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all"
               />
@@ -313,12 +317,12 @@ export default function ChangePasswordPage() {
             </div>
             {confirmPassword && newPassword !== confirmPassword && (
               <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                <FaTimes /> Passwords do not match
+                <FaTimes /> 密码不一致
               </p>
             )}
             {confirmPassword && newPassword === confirmPassword && newPassword.length > 0 && (
               <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
-                <FaCheck /> Passwords match
+                <FaCheck /> 密码一致
               </p>
             )}
           </div>
@@ -331,19 +335,19 @@ export default function ChangePasswordPage() {
             {loading ? (
               <>
                 <FaSpinner className="animate-spin" />
-                Changing Password...
+                正在修改密码...
               </>
             ) : (
               <>
                 <FaLock />
-                Change Password
+                修改密码
               </>
             )}
           </button>
         </form>
 
         <p className="text-xs text-center text-slate-400">
-          You must change your password before accessing the system
+          在访问系统前，你必须先修改密码
         </p>
       </div>
     </div>

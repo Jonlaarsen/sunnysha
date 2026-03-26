@@ -21,7 +21,7 @@ export default function SetupPasswordPage() {
     const checkToken = async () => {
       const hash = window.location.hash;
       if (!hash) {
-        toast.error("Invalid or missing setup link");
+        toast.error("设置链接无效或缺失");
         router.push("/");
         return;
       }
@@ -35,19 +35,19 @@ export default function SetupPasswordPage() {
     const errors: string[] = [];
     
     if (pwd.length < 8) {
-      errors.push("Password must be at least 8 characters long");
+      errors.push("密码长度至少为 8 个字符");
     }
     if (!/[A-Z]/.test(pwd)) {
-      errors.push("Password must contain at least one uppercase letter");
+      errors.push("密码必须包含至少一个大写字母");
     }
     if (!/[a-z]/.test(pwd)) {
-      errors.push("Password must contain at least one lowercase letter");
+      errors.push("密码必须包含至少一个小写字母");
     }
     if (!/[0-9]/.test(pwd)) {
-      errors.push("Password must contain at least one number");
+      errors.push("密码必须包含至少一个数字");
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
-      errors.push("Password must contain at least one special character");
+      errors.push("密码必须包含至少一个特殊字符");
     }
 
     return { valid: errors.length === 0, errors };
@@ -59,7 +59,7 @@ export default function SetupPasswordPage() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("两次输入的密码不一致");
       setLoading(false);
       return;
     }
@@ -80,7 +80,7 @@ export default function SetupPasswordPage() {
       const refreshToken = params.get("refresh_token");
 
       if (!accessToken) {
-        throw new Error("Invalid setup link. Please request a new one.");
+        throw new Error("设置链接无效，请重新获取新链接。");
       }
 
       // Set the session with the tokens
@@ -117,7 +117,7 @@ export default function SetupPasswordPage() {
         // Don't fail if metadata update fails
       }
 
-      toast.success("Password set successfully! Redirecting...", {
+      toast.success("密码设置成功，正在跳转...", {
         icon: <FaCheck />,
         duration: 2000,
       });
@@ -128,7 +128,7 @@ export default function SetupPasswordPage() {
       }, 1500);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to set password";
+        error instanceof Error ? error.message : "设置密码失败";
       toast.error(errorMessage, {
         icon: <FaTimes />,
         duration: 5000,
@@ -145,7 +145,7 @@ export default function SetupPasswordPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-400 via-indigo-500 to-sky-300">
         <div className="text-center">
           <FaSpinner className="animate-spin text-4xl text-white mx-auto mb-4" />
-          <p className="text-white text-lg">Validating setup link...</p>
+          <p className="text-white text-lg">正在验证设置链接...</p>
         </div>
       </div>
     );
@@ -160,10 +160,10 @@ export default function SetupPasswordPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
-              Set Up Your Password
+              设置密码
             </h1>
             <p className="text-sm text-slate-500">
-              Create a secure password for your account
+              为你的账户创建一个安全密码
             </p>
           </div>
         </div>
@@ -171,14 +171,14 @@ export default function SetupPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-600">
-              New Password
+              新密码
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="请输入密码"
                 required
                 className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all pr-10"
               />
@@ -196,23 +196,23 @@ export default function SetupPasswordPage() {
               <div className="text-xs space-y-1 mt-2">
                 <div className={`flex items-center gap-2 ${password.length >= 8 ? "text-green-600" : "text-red-600"}`}>
                   {password.length >= 8 ? <FaCheck /> : <FaTimes />}
-                  <span>At least 8 characters</span>
+                  <span>至少 8 个字符</span>
                 </div>
                 <div className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? "text-green-600" : "text-red-600"}`}>
                   {/[A-Z]/.test(password) ? <FaCheck /> : <FaTimes />}
-                  <span>One uppercase letter</span>
+                  <span>至少一个大写字母</span>
                 </div>
                 <div className={`flex items-center gap-2 ${/[a-z]/.test(password) ? "text-green-600" : "text-red-600"}`}>
                   {/[a-z]/.test(password) ? <FaCheck /> : <FaTimes />}
-                  <span>One lowercase letter</span>
+                  <span>至少一个小写字母</span>
                 </div>
                 <div className={`flex items-center gap-2 ${/[0-9]/.test(password) ? "text-green-600" : "text-red-600"}`}>
                   {/[0-9]/.test(password) ? <FaCheck /> : <FaTimes />}
-                  <span>One number</span>
+                  <span>至少一个数字</span>
                 </div>
                 <div className={`flex items-center gap-2 ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "text-green-600" : "text-red-600"}`}>
                   {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? <FaCheck /> : <FaTimes />}
-                  <span>One special character</span>
+                  <span>至少一个特殊字符</span>
                 </div>
               </div>
             )}
@@ -220,14 +220,14 @@ export default function SetupPasswordPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-600">
-              Confirm Password
+              确认密码
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
+                placeholder="请再次输入密码"
                 required
                 className="w-full p-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all pr-10"
               />
@@ -244,12 +244,12 @@ export default function SetupPasswordPage() {
                 {passwordsMatch ? (
                   <div className="flex items-center gap-2 text-green-600">
                     <FaCheck />
-                    <span>Passwords match</span>
+                    <span>密码一致</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 text-red-600">
                     <FaTimes />
-                    <span>Passwords do not match</span>
+                    <span>密码不一致</span>
                   </div>
                 )}
               </div>
@@ -264,19 +264,19 @@ export default function SetupPasswordPage() {
             {loading ? (
               <>
                 <FaSpinner className="animate-spin" />
-                Setting Password...
+                正在设置密码...
               </>
             ) : (
               <>
                 <FaLock />
-                Set Password
+                设置密码
               </>
             )}
           </button>
         </form>
 
         <p className="text-xs text-center text-slate-400">
-          This link will expire in 24 hours for security purposes
+          出于安全考虑，此链接将在 24 小时后失效
         </p>
       </div>
     </div>

@@ -200,9 +200,9 @@ export default function UserRecordsModal({
   };
 
   const getUserEmail = (userId: string): string => {
+    if (userId.includes("@")) return userId;
     const mapped = userMap.get(userId);
     if (mapped) return mapped;
-    if (userId.startsWith("deleted:")) return "已删除用户";
     return "未知";
   };
 

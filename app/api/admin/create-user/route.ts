@@ -72,10 +72,14 @@ export async function POST(req: NextRequest) {
 
     // Generate password reset link for the user to set their password.
     // Prefer configured URL and never default to localhost.
-    const appUrl =
+    let appUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       process.env.APP_URL ||
       "https://sunnysha.vercel.app";
+    const isLocalhostUrl = /localhost|127\.0\.0\.1/i.test(appUrl);
+    if (process.env.NODE_ENV === "production" && isLocalhostUrl) {
+      appUrl = "https://sunnysha.vercel.app";
+    }
     
     // Generate password reset token
     const { data: resetData, error: resetError } = await admin.auth.admin.generateLink({
@@ -123,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "User created successfully. Account setup link sent to email.",
+      message: "用户创建成功，账户设置链接已发送到邮箱。",
       user: {
         id: data.user.id,
         email: data.user.email,
